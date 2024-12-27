@@ -1,0 +1,72 @@
+baseURL: "https://tabtomd.daspyro.de/"
+languageCode: en-us
+title: "tabtomd"
+
+module:
+  imports:
+    - path: github.com/imfing/hextra
+
+menu:
+  main:
+    - identifier: documentation
+      name: Documentation
+      pageRef: /docs
+      weight: 1
+    - identifier: media
+      name: Media
+      pageRef: /media
+      weight: 2
+    - name: Search
+      weight: 3
+      params:
+        type: search
+    - name: GitHub
+      weight: 4
+      url: "https://github.com/pierow2k/tabtomd"
+      params:
+        icon: github
+
+params:
+  comments:
+    enable: false
+
+  description: Transform Tab-Delimited Data into Polished Markdown Tables in Seconds
+
+  displayUpdatedDate: true
+  dateFormat: "January 2, 2006"
+
+  theme:
+    # light | dark | system
+    default: dark
+    displayToggle: false
+
+  editURL:
+    enable: true
+    base: "https://github.com/pierow2k/tabtomd/edit/master/site/content"
+
+  footer:
+    enable: false
+    displayCopyright: false
+    displayPoweredBy: false
+    width: normal
+
+  highlight:
+    copy:
+      enable: true
+      # hover | always
+      display: hover
+
+  navbar:
+    displayTitle: true
+    displayLogo: false
+    width: wide
+
+  search:
+    enable: true
+    type: flexsearch
+
+    flexsearch:
+      index: content
+      # full | forward | reverse | strict
+      # https://github.com/nextapps-de/flexsearch/#tokenizer-prefix-search
+      tokenize: forward

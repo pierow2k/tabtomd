@@ -1,0 +1,131 @@
+run:
+  deadline: 5m
+
+issues:
+  include:
+    - EXC0001
+    - EXC0005
+    - EXC0011
+    - EXC0012
+    - EXC0013
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  disable-all: true
+  enable:
+    - bidichk
+    - bodyclose  # Enabled 2024-08-24
+    - containedctx
+    - contextcheck
+    - copyloopvar  # Enabled on 2024-08-24
+    - cyclop
+    - decorder
+    # - depguard
+    - dogsled
+    - dupl
+    - dupword
+    - durationcheck
+    - err113
+    - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - forcetypeassert
+    - funlen
+    - gci
+    - ginkgolinter
+    - gocheckcompilerdirectives
+    # - gochecknoglobals
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - gofmt
+    - goheader
+    - goimports
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - grouper
+    - importas
+    - ineffassign
+    - interfacebloat
+    - ireturn
+    - lll
+    - loggercheck
+    - maintidx
+    - makezero
+    - misspell
+    - mnd
+    - musttag
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - nlreturn
+    - noctx
+    - nolintlint
+    - nonamedreturns
+    - nosprintfhostport
+    - paralleltest
+    - prealloc
+    - predeclared
+    - promlinter
+    - reassign
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - stylecheck
+    - tagliatelle
+    - tenv
+    - testableexamples
+    - testpackage
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - varnamelen
+    - whitespace
+    - wrapcheck
+    - wsl
+    - asasalint
+    - asciicheck
+    - canonicalheader
+    # - exhaustruct
+    # - exportloopref - Deprecated since v1.60.2. Replaced by copyloopvar
+    - fatcontext
+    # - forbidigo
+    # - gochecknoinits
+    - gochecksumtype
+    - gofumpt
+    - gosmopolitan
+    - inamedparam
+    - intrange
+    - mirror
+    - perfsprint
+    - protogetter
+    - sloglint
+    - spancheck
+    - tagalign
+    - testifylint
+    - wastedassign
+    - zerologlint
+
+fast: false
+
+linters-settings:
+  nestif:
+    # Minimal complexity of if statements to report.
+    # Default: 5
+    min-complexity: 6
