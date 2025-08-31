@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"unicode/utf8"
 )
 
 // DefaultHeaderSeparatorWidth specifies the default number of hyphens used
@@ -46,7 +47,9 @@ func ToMDTable(text string) (string, error) {
 	}
 
 	formattedRows := formatRows(table, nil)
-	if len(formattedRows) > 1 {
+	// A table with just a header row is valid, so we need to add a separator.
+	// The original check `len(formattedRows) > 1` was incorrect for single-row tables.
+	if len(table) > 0 {
 		headerSeparator := buildHeaderSeparator(make([]int, len(table[0])), DefaultHeaderSeparatorWidth)
 		formattedRows = insertHeaderSeparator(formattedRows, headerSeparator)
 	}
@@ -60,30 +63,56 @@ func ToMDTable(text string) (string, error) {
 //
 // Returns the parsed table, column widths, and an error if the data is inconsistent.
 func parseAndAnalyze(text string) ([][]string, []int, error) {
-	lines := strings.Split(strings.TrimSpace(text), "\n")
+	// Split the input text into lines to handle them individually.
+	lines := strings.Split(text, "\n")
+
+	// Find the start and end of the actual content, trimming empty or whitespace-only lines
+	// from the beginning and end of the input.
+	start := 0
+	for start < len(lines) && strings.TrimSpace(lines[start]) == "" {
+		start++
+	}
+	end := len(lines)
+	for end > start && strings.TrimSpace(lines[end-1]) == "" {
+		end--
+	}
+	lines = lines[start:end]
+
+	// If there are no content lines after trimming, return empty results.
 	if len(lines) == 0 {
 		return nil, nil, nil
 	}
 
+	// Pre-allocate a slice to hold the parsed table data.
 	tableData := make([][]string, len(lines))
 
+	// This slice will store the maximum width of each column.
 	var columnWidths []int
 
+	// Iterate over each line to parse it into columns.
 	for lineIndex, line := range lines {
+		// Split the line by tabs to get the columns for the current row.
 		tableData[lineIndex] = strings.Split(line, "\t")
+
+		// For the first row (header), initialize the columnWidths slice.
 		if lineIndex == 0 {
 			columnWidths = make([]int, len(tableData[lineIndex]))
 		} else if len(tableData[lineIndex]) != len(columnWidths) {
+			// For subsequent rows, ensure the column count is consistent.
 			return nil, nil, fmt.Errorf("%w: row %d", ErrInconsistentColumnCount, lineIndex+1)
 		}
 
+		// Iterate over each column to calculate its maximum width.
 		for columnIndex, column := range tableData[lineIndex] {
-			if len(column) > columnWidths[columnIndex] {
-				columnWidths[columnIndex] = len(column)
+			// Update the maximum width if the current column's content is longer.
+			// Use RuneCountInString to correctly handle multi-byte characters.
+			if utf8.RuneCountInString(column) > columnWidths[columnIndex] {
+				columnWidths[columnIndex] = utf8.RuneCountInString(column)
 			}
 		}
 	}
 
+	// Return the parsed table, column widths, and no error.
 	return tableData, columnWidths, nil
 }
 
@@ -100,7 +129,8 @@ func formatRows(table [][]string, columnWidths []int) []string {
 
 		for columnIndex, column := range row {
 			if columnWidths != nil {
-				formattedRow[columnIndex] = fmt.Sprintf("%-*s", columnWidths[columnIndex], column)
+				padding := columnWidths[columnIndex] - utf8.RuneCountInString(column)
+				formattedRow[columnIndex] = column + strings.Repeat(" ", padding)
 			} else {
 				formattedRow[columnIndex] = column
 			}
@@ -122,13 +152,20 @@ func buildHeaderSeparator(columnWidths []int, uniformWidth int) string {
 
 	builder.WriteString("| ")
 
-	for columnIndex := range columnWidths {
-		width := columnWidths[columnIndex]
+	for columnIndex, colWidth := range columnWidths {
+		width := colWidth
 		if uniformWidth > 0 {
 			width = uniformWidth
 		}
+		// For pretty tables, ensure the separator width is at least 3 hyphens
+		// to be compliant with the Markdown specification.
+		if width < 3 {
+			width = 3
+		}
 
-		builder.WriteString(strings.Repeat("-", width))
+		for i := 0; i < width; i++ {
+			builder.WriteByte('-')
+		}
 
 		if columnIndex < len(columnWidths)-1 {
 			builder.WriteString(" | ")
