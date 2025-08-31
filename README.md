@@ -1,19 +1,23 @@
 # tabtomd
-
+<!-- markdownlint-disable no-inline-html no-emphasis-as-heading -->
 ![tabtomd Banner](./doc/tabtomd_banner-1200x400.png)
 
 ![Website](https://img.shields.io/website?url=https%3A%2F%2Ftabtomd.daspyro.de)
  ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/pierow2k/tabtomd) ![License](https://img.shields.io/github/license/pierow2k/tabtomd) ![Libraries.io dependency status for GitHub repo](https://img.shields.io/librariesio/github/pierow2k/tabtomd) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/086e9addfdba490aa0669cc094b8fe0e)](https://app.codacy.com/gh/pierow2k/tabtomd/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
-
 **Transform Tab-Delimited Data into Polished Markdown Tables in Seconds**
 
-`tabtomd` is a powerful and user-friendly command-line tool designed to convert tab-delimited text into Markdown table format. It supports input from either the system clipboard or a specified file and offers flexible options to output the converted table to the terminal or save it to a file.
+`tabtomd` is a powerful and user-friendly command-line tool designed to
+convert tab-delimited text into Markdown table format. It supports input
+from either the system clipboard or a specified file and offers flexible
+options to output the converted table to the terminal or save it to a file.
 
-With features like the optional `--pretty` flag to align table columns, `tabtomd` is perfect for creating polished Markdown tables for documentation, reports, or any structured data presentations.
+With features like the optional `--pretty` flag to align table columns,
+`tabtomd` is perfect for creating polished Markdown tables for
+documentation, reports, or any structured data presentations.
 
-**You can find more detailed information on the tabtomd website at [https://tabtomd.daspyro.de](https://tabtomd.daspyro.de)**
-
+**You can find more detailed information on the tabtomd website at
+[https://tabtomd.daspyro.de](https://tabtomd.daspyro.de)**
 
 <!-- TABLE OF CONTENTS -->
 <details closed="closed">
@@ -36,13 +40,13 @@ tabtomd [COMMAND] [OPTIONS]
 
 ### Commands
 
-| Command    | Description                                                |
-|------------|------------------------------------------------------------|
-| `completion` | Generate an autocompletion script for the specified shell. |
-| `file`       | Convert a tab-delimited file to a Markdown table.          |
-| `help`       | Display help information for any command.                  |
-| `paste`      | Convert tab-delimited data from the system clipboard.      |
-| `version`    | Display the `tabtomd` version and build information.       |
+| Command      | Description                                                |  
+| ------------ | ---------------------------------------------------------- |  
+| `completion` | Generate an autocompletion script for the specified shell. |  
+| `file`       | Convert a tab-delimited file to a Markdown table.          |  
+| `help`       | Display help information for any command.                  |  
+| `paste`      | Convert tab-delimited data from the system clipboard.      |  
+| `version`    | Display the `tabtomd` version and build information.       |  
 
 ### Flags
 
@@ -112,11 +116,13 @@ tabtomd paste --output markdown_table.md --pretty
 ### Convert Tab-Delimited File to Markdown Table
 
 #### Print to Terminal
+
 ```bash
 tabtomd file tsv_file.txt --print
 ```
 
 #### Save to File with Alignment
+
 ```bash
 tabtomd file tsv_file.txt --output markdown_table.md --pretty
 ```
@@ -140,8 +146,9 @@ go install github.com/pierow2k/tabtomd@latest
 
 ### Clone and Build
 
-Alternatively, you can clone the repository and build the application manually. Manual
-builds also require having [Go](https://golang.org/dl/) installed on your system.
+Alternatively, you can clone the repository and build the application
+manually. Manual builds also require having [Go](https://golang.org/dl/)
+installed on your system.
 
 ```bash
 git clone https://github.com/pierow2k/tabtomd.git
@@ -151,7 +158,8 @@ go build
 
 ## Getting Help
 
-Use the `--help` flag or the `help` command for detailed information on each command. For example:
+Use the `--help` flag or the `help` command for detailed information on
+each command. For example:
 
 ```bash
 tabtomd file --help
@@ -163,17 +171,23 @@ or
 tabtomd help file
 ```
 
-Have an idea for a new feature or noticed something that isn’t working quite right? [Open an issue](https://github.com/pierow2k/tabtomd/issues) to let us know. Your feedback helps us keep tabtomd reliable and feature-rich.
+Have an idea for a new feature or noticed something that isn’t working
+quite right? [Open an issue](https://github.com/pierow2k/tabtomd/issues) to
+let us know. Your feedback helps us keep tabtomd reliable and feature-rich.
 
 ## Contributing
 
 We welcome contributions! Here's how you can help:
 
-- **Submit a Pull Request**: If you’ve made improvements or fixed a bug, we’d love to see your work. [Submit a pull request](https://www.github.com/pierow2k/tabtomd/pulls) and share your changes with the community.
+- **Submit a Pull Request**: If you’ve made improvements
+or fixed a bug, we’d love to see your work. [Submit a pull
+request](https://www.github.com/pierow2k/tabtomd/pulls) and share your
+changes with the community.
 
 We appreciate your support and contributions, which drive the continued
 growth and success of tabtomd. Thank you for being part of the journey!
 
 ## License
 
-`tabtomd` is distributed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+`tabtomd` is distributed under the MIT License. See the [LICENSE](LICENSE)
+file for more details.
