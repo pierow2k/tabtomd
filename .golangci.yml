@@ -1,28 +1,17 @@
-run:
-  deadline: 5m
-
-issues:
-  include:
-    - EXC0001
-    - EXC0005
-    - EXC0011
-    - EXC0012
-    - EXC0013
-
-  max-issues-per-linter: 0
-  max-same-issues: 0
-
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
+    - asasalint
+    - asciicheck
     - bidichk
-    - bodyclose  # Enabled 2024-08-24
+    - bodyclose
+    - canonicalheader
     - containedctx
     - contextcheck
-    - copyloopvar  # Enabled on 2024-08-24
+    - copyloopvar
     - cyclop
     - decorder
-    # - depguard
     - dogsled
     - dupl
     - dupword
@@ -33,42 +22,46 @@ linters:
     - errname
     - errorlint
     - exhaustive
+    - exptostd
+    - fatcontext
     - forcetypeassert
     - funlen
-    - gci
     - ginkgolinter
     - gocheckcompilerdirectives
-    # - gochecknoglobals
+    - gochecksumtype
     - gocognit
     - goconst
     - gocritic
     - gocyclo
     - godot
     - godox
-    - gofmt
     - goheader
-    - goimports
     - gomoddirectives
     - gomodguard
     - goprintffuncname
     - gosec
-    - gosimple
+    - gosmopolitan
     - govet
     - grouper
+    - iface
     - importas
+    - inamedparam
     - ineffassign
     - interfacebloat
+    - intrange
     - ireturn
     - lll
     - loggercheck
     - maintidx
     - makezero
+    - mirror
     - misspell
     - mnd
     - musttag
     - nakedret
     - nestif
     - nilerr
+    - nilnesserr
     - nilnil
     - nlreturn
     - noctx
@@ -76,18 +69,23 @@ linters:
     - nonamedreturns
     - nosprintfhostport
     - paralleltest
+    - perfsprint
     - prealloc
     - predeclared
     - promlinter
+    - protogetter
     - reassign
+    - recvcheck
     - revive
     - rowserrcheck
+    - sloglint
+    - spancheck
     - sqlclosecheck
     - staticcheck
-    - stylecheck
+    - tagalign
     - tagliatelle
-    - tenv
     - testableexamples
+    - testifylint
     - testpackage
     - thelper
     - tparallel
@@ -95,37 +93,40 @@ linters:
     - unparam
     - unused
     - usestdlibvars
+    - usetesting
     - varnamelen
+    - wastedassign
     - whitespace
     - wrapcheck
-    - wsl
-    - asasalint
-    - asciicheck
-    - canonicalheader
-    # - exhaustruct
-    # - exportloopref - Deprecated since v1.60.2. Replaced by copyloopvar
-    - fatcontext
-    # - forbidigo
-    # - gochecknoinits
-    - gochecksumtype
-    - gofumpt
-    - gosmopolitan
-    - inamedparam
-    - intrange
-    - mirror
-    - perfsprint
-    - protogetter
-    - sloglint
-    - spancheck
-    - tagalign
-    - testifylint
-    - wastedassign
+    - wsl_v5
     - zerologlint
-
-fast: false
-
-linters-settings:
-  nestif:
-    # Minimal complexity of if statements to report.
-    # Default: 5
-    min-complexity: 6
+  settings:
+    nestif:
+      min-complexity: 6
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
