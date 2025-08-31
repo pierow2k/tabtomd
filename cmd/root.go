@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	// Build date is rewritten at build time by the make file.
+	// BuildDate is rewritten at build time by the make file.
 	BuildDate = "YYYY-MM-DDTHH:MM:SSZ"
 	// Version is rewritten at build time by the make file.
 	Version = "X.X.X"
