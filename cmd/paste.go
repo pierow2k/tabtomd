@@ -6,15 +6,14 @@ import (
 	"fmt"
 
 	"github.com/atotto/clipboard"
-	"github.com/pierow2k/tabtomd/internal/convert"
 	"github.com/pierow2k/tabtomd/internal/fileops"
+	"github.com/pierow2k/tabtomd/internal/tabto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 // Flags for optional arguments
 var (
-	prettyFlag     bool
 	outputFilename string
 	printFlag      bool
 )
@@ -35,39 +34,39 @@ func init() {
 	pasteCmd.Flags().StringVar(&outputFilename, "output", "", "Specify the output file to save the Markdown table")
 	viper.BindPFlag("output", pasteCmd.Flags().Lookup("output"))
 
-	pasteCmd.Flags().BoolVar(&prettyFlag, "pretty", false, "Use pretty Markdown table formatting")
-	viper.BindPFlag("prettyFlag", pasteCmd.Flags().Lookup("pretty"))
-
 	// Add the pasteCmd to the root command
 	rootCmd.AddCommand(pasteCmd)
 }
 
 func pasteClipboard() error {
-	text, err := clipboard.ReadAll() // Read text from clipboard
+	text, err := clipboard.ReadAll()
 	if err != nil {
 		return fmt.Errorf("failed to read from clipboard: %w", err)
 	}
 
-	var markdownTable string
-
-	// Convert tab-delimited text to Markdown table
-	if prettyFlag {
-		markdownTable, _ = convert.ToMDTablePretty(text)
-	} else {
-		markdownTable, _ = convert.ToMDTable(text)
+	markdownTable, err := tabto.Markdown(text)
+	if err != nil {
+		return fmt.Errorf("failed to convert clipboard contents to Markdown: %w", err)
 	}
 
-	// Check if the --output flag was provided
+	// If neither --print nor --output is set, default to copying the result
+	// back onto the clipboard so you can paste the Markdown immediately.
+	if outputFilename == "" && !viper.GetBool("printFlag") {
+		if err := clipboard.WriteAll(markdownTable); err != nil {
+			return fmt.Errorf("failed to write Markdown to clipboard: %w", err)
+		}
+		fmt.Println("Markdown table copied to clipboard.")
+		return nil
+	}
+
 	if outputFilename != "" {
-		err = fileops.WriteMD(outputFilename, markdownTable)
-		if err != nil {
+		if err := fileops.WriteMD(outputFilename, markdownTable); err != nil {
 			return fmt.Errorf("failed to write to file: %w", err)
 		}
 		fmt.Printf("Markdown table successfully written to %s\n", outputFilename)
 	}
 
 	if viper.GetBool("printFlag") {
-		// Print the Markdown table to stdout if printOutput is enabled
 		fmt.Println(markdownTable)
 	}
 

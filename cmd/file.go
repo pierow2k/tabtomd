@@ -3,18 +3,11 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/pierow2k/tabtomd/internal/convert"
 	"github.com/pierow2k/tabtomd/internal/fileops"
+	"github.com/pierow2k/tabtomd/internal/tabto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-// Flags for optional arguments
-// var (
-// 	prettyFlag         bool
-// 	outputFilename string
-// 	print          bool
-// )
 
 // fileCmd represents the file command. It configures the Cobra command
 // to handle file input operations.
@@ -29,9 +22,6 @@ var fileCmd = &cobra.Command{
 func init() {
 	fileCmd.Flags().BoolVar(&printFlag, "print", false, "Print to screen")
 	viper.BindPFlag("printFlag", fileCmd.Flags().Lookup("print"))
-
-	fileCmd.Flags().BoolVar(&prettyFlag, "pretty", false, "Use pretty Markdown table formatting")
-	viper.BindPFlag("prettyFlag", fileCmd.Flags().Lookup("pretty"))
 
 	fileCmd.Flags().StringVar(&outputFilename, "output", "", "Specify the output file to save the Markdown table")
 	viper.BindPFlag("output", fileCmd.Flags().Lookup("output"))
@@ -49,12 +39,8 @@ func processFile(filename string) error {
 
 	var markdownTable string
 
-	// Convert tab-delimited text to Markdown table based on the pretty flag
-	if prettyFlag {
-		markdownTable, _ = convert.ToMDTablePretty(content)
-	} else {
-		markdownTable, _ = convert.ToMDTable(content)
-	}
+	// Convert tab-delimited text to Markdown table.
+	markdownTable, _ = tabto.Markdown(content)
 
 	// Check if the --output flag was provided
 	if outputFilename != "" {
