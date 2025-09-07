@@ -120,6 +120,7 @@ func ExampleMarkdown_inconsistentColumns() {
 	if err != nil {
 		// The error message includes the row number and expected/actual counts.
 		fmt.Println(err)
+
 		return
 	}
 	// Output:
@@ -135,6 +136,7 @@ func ExampleMarkdown_withEmptyLines() {
 	markdownTable, err := tabto.Markdown(input)
 	if err != nil {
 		fmt.Println("Error:", err)
+
 		return
 	}
 

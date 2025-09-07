@@ -88,7 +88,11 @@ func determineColumnCount(lines []string) int {
 
 // validateAndParseRow validates a single row against the expected column count and
 // parses it. Empty rows are padded to match the expected column count.
-func validateAndParseRow(line string, expectedCols int, rowIndex int) ([]string, error) {
+func validateAndParseRow(
+	line string,
+	expectedCols int,
+	rowIndex int,
+) ([]string, error) {
 	// Treat lines containing only whitespace as empty.
 	if strings.TrimSpace(line) == "" {
 		return make([]string, expectedCols), nil
@@ -97,8 +101,14 @@ func validateAndParseRow(line string, expectedCols int, rowIndex int) ([]string,
 	row := parseRow(line)
 
 	if len(row) != expectedCols {
-		return nil, fmt.Errorf("%w: row %d (expected %d columns, got %d): %q",
-			ErrInconsistentColumnCount, rowIndex+1, expectedCols, len(row), strings.TrimSpace(line))
+		return nil, fmt.Errorf(
+			"%w: row %d (expected %d columns, got %d): %q",
+			ErrInconsistentColumnCount,
+			rowIndex+1,
+			expectedCols,
+			len(row),
+			strings.TrimSpace(line),
+		)
 	}
 
 	return row, nil
@@ -173,8 +183,13 @@ func Markdown(text string) (string, error) {
 	expectedCols := len(tableData[0])
 	for i, row := range tableData {
 		if len(row) != expectedCols {
-			return "", fmt.Errorf("%w: row %d has %d columns, expected %d",
-				ErrInternalConsistency, i, len(row), expectedCols)
+			return "", fmt.Errorf(
+				"%w: row %d has %d columns, expected %d",
+				ErrInternalConsistency,
+				i,
+				len(row),
+				expectedCols,
+			)
 		}
 	}
 
@@ -221,4 +236,66 @@ func Markdown(text string) (string, error) {
 	result := out.String()
 
 	return strings.TrimSuffix(result, "\n"), nil
+}
+
+// HTML converts tab-delimited text into an HTML table.
+//
+// This function uses the 'go-pretty' library to generate the HTML table.
+// The library handles HTML escaping automatically.
+//
+// Returns an empty string (not an error) for empty input. Errors occur only
+// for parsing failures (inconsistent column counts).
+func HTML(text string) (string, error) {
+	tableData, err := parseTable(text)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse table: %w", err)
+	}
+
+	if len(tableData) == 0 {
+		return "", nil
+	}
+
+	// Validate consistency (should be guaranteed by parseTable, but defensive)
+	expectedCols := len(tableData[0])
+	for i, row := range tableData {
+		if len(row) != expectedCols {
+			return "", fmt.Errorf(
+				"%w: row %d has %d columns, expected %d",
+				ErrInternalConsistency,
+				i,
+				len(row),
+				expectedCols,
+			)
+		}
+	}
+
+	var out strings.Builder
+	out.Grow(defaultOutputBufferSize)
+
+	tableWriter := table.NewWriter()
+	tableWriter.SetOutputMirror(&out)
+
+	// Add header
+	headerRow := make(table.Row, len(tableData[0]))
+	for index, cell := range tableData[0] {
+		headerRow[index] = cell
+	}
+
+	tableWriter.AppendHeader(headerRow)
+
+	// Add body rows if they exist
+	if len(tableData) > 1 {
+		for _, rowData := range tableData[1:] {
+			row := make(table.Row, len(rowData))
+			for i, cell := range rowData {
+				row[i] = cell
+			}
+
+			tableWriter.AppendRow(row)
+		}
+	}
+
+	tableWriter.RenderHTML()
+
+	return out.String(), nil
 }
