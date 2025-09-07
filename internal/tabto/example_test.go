@@ -90,9 +90,8 @@ func ExampleMarkdown_singleRow() {
 }
 
 // ExampleMarkdown_multiByteCharacters demonstrates handling of multi-byte
-// characters. Most notably, it shows that the table does not align
-// properly with characters that occupy more than one byte, such as Chinese
-// characters.
+// characters. The `go-pretty` library correctly handles these characters
+// when determining column widths for basic table generation.
 //
 //nolint:gosmopolitan
 func ExampleMarkdown_multiByteCharacters() {
@@ -110,4 +109,39 @@ func ExampleMarkdown_multiByteCharacters() {
 	// | 你好 | a |
 	// | --- | --- |
 	// | 世界 | b |
+}
+
+// ExampleMarkdown_inconsistentColumns demonstrates how the function returns
+// an error when the input data has an inconsistent number of columns.
+func ExampleMarkdown_inconsistentColumns() {
+	input := "h1\th2\nh1" // Second row has fewer columns
+
+	_, err := tabto.Markdown(input)
+	if err != nil {
+		// The error message includes the row number and expected/actual counts.
+		fmt.Println(err)
+		return
+	}
+	// Output:
+	// failed to parse table: row has inconsistent column count: row 2 (expected 2 columns, got 1): "h1"
+}
+
+// ExampleMarkdown_withEmptyLines demonstrates that leading and trailing
+// empty lines are trimmed, but internal empty lines are preserved as empty rows
+// in the resulting table.
+func ExampleMarkdown_withEmptyLines() {
+	input := "\n\nName\tAge\n\nAlice\t30\n\n"
+
+	markdownTable, err := tabto.Markdown(input)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	fmt.Println(markdownTable)
+	// Output:
+	// | Name | Age |
+	// | --- | --- |
+	// |  |  |
+	// | Alice | 30 |
 }
