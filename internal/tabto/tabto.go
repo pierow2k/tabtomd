@@ -10,9 +10,19 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
+// defaultOutputBufferSize is the default initial buffer size for the output builder.
+const defaultOutputBufferSize = 1024
+
+// defaultMaxColumnWidth is the default maximum width for table columns.
+const defaultMaxColumnWidth = 50
+
 // ErrInconsistentColumnCount is returned when rows in the input text have
 // varying numbers of columns, indicating malformed tab-delimited data.
 var ErrInconsistentColumnCount = errors.New("row has inconsistent column count")
+
+// ErrInternalConsistency is returned when an internal consistency error occurs
+// during table processing.
+var ErrInternalConsistency = errors.New("internal consistency error")
 
 // parseRow splits a tab-delimited line into cells and trims whitespace from each.
 func parseRow(line string) []string {
@@ -122,16 +132,16 @@ func Markdown(text string) (string, error) {
 	expectedCols := len(tableData[0])
 	for i, row := range tableData {
 		if len(row) != expectedCols {
-			return "", fmt.Errorf("internal consistency error: row %d has %d columns, expected %d",
-				i, len(row), expectedCols)
+			return "", fmt.Errorf("%w: row %d has %d columns, expected %d",
+				ErrInternalConsistency, i, len(row), expectedCols)
 		}
 	}
 
 	var out strings.Builder
-	out.Grow(1024) // Pre-allocate capacity for better performance
+	out.Grow(defaultOutputBufferSize) // Pre-allocate capacity for better performance
 
-	t := table.NewWriter()
-	t.SetOutputMirror(&out)
+	tableWriter := table.NewWriter()
+	tableWriter.SetOutputMirror(&out)
 
 	// Add header - no escaping needed
 	headerRow := make(table.Row, len(tableData[0]))
@@ -139,7 +149,7 @@ func Markdown(text string) (string, error) {
 		headerRow[index] = cell // Already trimmed by parseRow
 	}
 
-	t.AppendHeader(headerRow)
+	tableWriter.AppendHeader(headerRow)
 
 	// Add body rows if they exist
 	if len(tableData) > 1 {
@@ -149,7 +159,7 @@ func Markdown(text string) (string, error) {
 				row[i] = cell // Already trimmed by parseRow
 			}
 
-			t.AppendRow(row)
+			tableWriter.AppendRow(row)
 		}
 	}
 
@@ -158,13 +168,13 @@ func Markdown(text string) (string, error) {
 	for i := range expectedCols {
 		columnConfigs[i] = table.ColumnConfig{
 			Number:   i,
-			WidthMax: 50, // Adjust based on your needs
+			WidthMax: defaultMaxColumnWidth, // Adjust based on your needs
 		}
 	}
 
-	t.SetColumnConfigs(columnConfigs)
+	tableWriter.SetColumnConfigs(columnConfigs)
 
-	t.RenderMarkdown()
+	tableWriter.RenderMarkdown()
 
 	// Trim trailing newline for consistent output
 	result := out.String()
