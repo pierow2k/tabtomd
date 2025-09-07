@@ -10,6 +10,8 @@ import (
 )
 
 func TestMarkdown(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    string
@@ -42,15 +44,22 @@ func TestMarkdown(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := tabto.Markdown(tt.input)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Markdown() error = %v, wantErr %v", err, tt.wantErr)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := tabto.Markdown(testCase.input)
+			if (err != nil) != testCase.wantErr {
+				t.Errorf("Markdown() error = %v, wantErr %v", err, testCase.wantErr)
+
 				return
 			}
-			if !tt.wantErr && !strings.Contains(result, tt.contains) {
-				t.Errorf("Markdown() result does not contain expected text:\ngot:\n%s\nexpected to contain: %s", result, tt.contains)
+
+			if !testCase.wantErr && !strings.Contains(result, testCase.contains) {
+				t.Errorf(
+					"Markdown() result does not contain expected text:\ngot:\n%s\nexpected to contain: %s",
+					result,
+					testCase.contains)
 			}
 		})
 	}

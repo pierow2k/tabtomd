@@ -40,16 +40,8 @@ func parseRow(line string) []string {
 	return row
 }
 
-// parseTable parses tab-delimited text into a two-dimensional slice of strings,
-// representing the table's rows and columns. It trims leading/trailing empty lines
-// and whitespace from cells. Empty input returns an empty table. It ensures that
-// all non-empty rows have the same number of columns.
-//
-// Returns the parsed table and an error if the data is inconsistent.
-func parseTable(text string) ([][]string, error) {
-	lines := strings.Split(text, "\n")
-
-	// Find content boundaries
+// trimEmptyLines removes leading and trailing empty lines from the input lines.
+func trimEmptyLines(lines []string) []string {
 	start := 0
 	for start < len(lines) && strings.TrimSpace(lines[start]) == "" {
 		start++
@@ -60,15 +52,12 @@ func parseTable(text string) ([][]string, error) {
 		end--
 	}
 
-	lines = lines[start:end]
+	return lines[start:end]
+}
 
-	if len(lines) == 0 {
-		return [][]string{}, nil
-	}
-
-	// Parse first non-empty row to determine column count
-	var columnCount int
-
+// findFirstNonEmptyRow finds the first non-empty row in the lines and returns its
+// parsed row data and index. Returns empty slice and -1 if no valid row is found.
+func findFirstNonEmptyRow(lines []string) ([]string, int) {
 	for index, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
 		if trimmedLine == "" {
@@ -76,33 +65,85 @@ func parseTable(text string) ([][]string, error) {
 		}
 
 		firstRow := parseRow(trimmedLine)
-		if len(firstRow) == 0 {
-			continue
-		}
 
-		columnCount = len(firstRow)
-		lines[index] = trimmedLine // Update with trimmed version
+		// Update the line in place with the trimmed version
+		lines[index] = trimmedLine
 
-		break
+		return firstRow, index
 	}
 
-	if columnCount == 0 {
-		return [][]string{}, nil
+	return []string{}, -1
+}
+
+// determineColumnCount determines the expected column count from the first valid row.
+// Returns 0 if no valid row is found.
+func determineColumnCount(lines []string) int {
+	firstRow, validIndex := findFirstNonEmptyRow(lines)
+	if validIndex == -1 {
+		return 0
 	}
 
-	// Parse all rows
+	return len(firstRow)
+}
+
+// validateAndParseRow validates a single row against the expected column count and
+// parses it. Empty rows are padded to match the expected column count.
+func validateAndParseRow(line string, expectedCols int, rowIndex int) ([]string, error) {
+	// Treat lines containing only whitespace as empty.
+	if strings.TrimSpace(line) == "" {
+		return make([]string, expectedCols), nil
+	}
+
+	row := parseRow(line)
+
+	if len(row) != expectedCols {
+		return nil, fmt.Errorf("%w: row %d (expected %d columns, got %d): %q",
+			ErrInconsistentColumnCount, rowIndex+1, expectedCols, len(row), strings.TrimSpace(line))
+	}
+
+	return row, nil
+}
+
+// parseTableRows parses all rows after determining the expected column count.
+// It validates each row and builds the complete table data structure.
+func parseTableRows(lines []string, expectedCols int) ([][]string, error) {
 	tableData := make([][]string, 0, len(lines))
+
 	for index, line := range lines {
-		row := parseRow(line)
-		if len(row) == 0 {
-			// Empty row - create with expected column count
-			row = make([]string, columnCount)
-		} else if len(row) != columnCount {
-			return nil, fmt.Errorf("%w: row %d (expected %d columns, got %d): %q",
-				ErrInconsistentColumnCount, index+1, columnCount, len(row), strings.TrimSpace(line))
+		row, err := validateAndParseRow(line, expectedCols, index)
+		if err != nil {
+			return nil, err
 		}
 
 		tableData = append(tableData, row)
+	}
+
+	return tableData, nil
+}
+
+// parseTable parses tab-delimited text into a two-dimensional slice of strings,
+// representing the table's rows and columns. It trims leading/trailing empty lines
+// and whitespace from cells. Empty input returns an empty table. It ensures that
+// all non-empty rows have the same number of columns.
+//
+// Returns the parsed table and an error if the data is inconsistent.
+func parseTable(text string) ([][]string, error) {
+	lines := strings.Split(text, "\n")
+
+	// Trim empty lines from beginning and end
+	lines = trimEmptyLines(lines)
+
+	if len(lines) == 0 {
+		return [][]string{}, nil
+	}
+
+	// Determine expected column count from first valid row
+	expectedCols := determineColumnCount(lines)
+
+	// Parse and validate all rows
+	tableData, err := parseTableRows(lines, expectedCols)
+	if err != nil {
+		return nil, err
 	}
 
 	return tableData, nil

@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Flags for optional arguments
+// Flags for optional arguments.
 var (
 	outputFilename string
 	printFlag      bool
@@ -27,6 +27,7 @@ var pasteCmd = &cobra.Command{
 	RunE:  func(_ *cobra.Command, _ []string) error { return pasteClipboard() },
 }
 
+//nolint:errcheck,gosec
 func init() {
 	pasteCmd.Flags().BoolVar(&printFlag, "print", false, "Print to screen")
 	viper.BindPFlag("printFlag", pasteCmd.Flags().Lookup("print"))
@@ -55,7 +56,9 @@ func pasteClipboard() error {
 		if err := clipboard.WriteAll(markdownTable); err != nil {
 			return fmt.Errorf("failed to write Markdown to clipboard: %w", err)
 		}
+
 		fmt.Println("Markdown table copied to clipboard.")
+
 		return nil
 	}
 
@@ -63,6 +66,7 @@ func pasteClipboard() error {
 		if err := fileops.WriteMD(outputFilename, markdownTable); err != nil {
 			return fmt.Errorf("failed to write to file: %w", err)
 		}
+
 		fmt.Printf("Markdown table successfully written to %s\n", outputFilename)
 	}
 

@@ -16,9 +16,10 @@ var fileCmd = &cobra.Command{
 	Short: "convert a tab-delimited file to a Markdown table",
 	Long:  "The file command reads a tab-delimited file and converts its content into a Markdown formatted table.",
 	Args:  cobra.ExactArgs(1),
-	RunE:  func(cmd *cobra.Command, args []string) error { return processFile(args[0]) },
+	RunE:  func(_ *cobra.Command, args []string) error { return processFile(args[0]) },
 }
 
+//nolint:errcheck,gosec
 func init() {
 	fileCmd.Flags().BoolVar(&printFlag, "print", false, "Print to screen")
 	viper.BindPFlag("printFlag", fileCmd.Flags().Lookup("print"))
@@ -34,7 +35,7 @@ func processFile(filename string) error {
 	// Read the file contents
 	content, err := fileops.ReadTSV(filename)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read file: %w", err)
 	}
 
 	var markdownTable string
@@ -48,6 +49,7 @@ func processFile(filename string) error {
 		if err != nil {
 			return fmt.Errorf("failed to write to file: %w", err)
 		}
+
 		fmt.Printf("Markdown table successfully written to %s\n", outputFilename)
 	}
 

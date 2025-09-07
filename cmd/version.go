@@ -15,7 +15,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the tabtomd version",
 	Long:  "Print the tabtomd version number and build date",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		fmt.Println("tabtomd - Convert tab delimited data to Markdown tables")
 		fmt.Println("Version:", viper.GetString("Version"), " - ", "Build Date:", viper.GetString("BuildDate"))
 		fmt.Println("Copyright (c)", viper.GetString("CopyrightDate"), "Pierow2k")
