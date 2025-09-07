@@ -158,6 +158,11 @@ func buildHeaderSeparator(columnWidths []int) string {
 //
 // Returns the updated slice of table rows.
 func insertHeaderSeparator(rows []string, separator string) []string {
+	// If there are no rows, there's nothing to do.
+	if len(rows) == 0 {
+		return rows
+	}
+
 	// If there's only a header row, append the separator.
 	if len(rows) == 1 {
 		return append(rows, separator)
