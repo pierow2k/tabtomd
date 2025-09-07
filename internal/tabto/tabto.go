@@ -14,51 +14,87 @@ import (
 // varying numbers of columns, indicating malformed tab-delimited data.
 var ErrInconsistentColumnCount = errors.New("row has inconsistent column count")
 
+// parseRow splits a tab-delimited line into cells and trims whitespace from each.
+func parseRow(line string) []string {
+	if line == "" {
+		return []string{}
+	}
+
+	cells := strings.Split(line, "\t")
+
+	row := make([]string, len(cells))
+	for i, cell := range cells {
+		row[i] = strings.TrimSpace(cell)
+	}
+
+	return row
+}
+
 // parseTable parses tab-delimited text into a two-dimensional slice of strings,
-// representing the table's rows and columns. It ensures that all rows
-// have the same number of columns.
+// representing the table's rows and columns. It trims leading/trailing empty lines
+// and whitespace from cells. Empty input returns an empty table. It ensures that
+// all non-empty rows have the same number of columns.
 //
 // Returns the parsed table and an error if the data is inconsistent.
 func parseTable(text string) ([][]string, error) {
-	// Split the input text into lines to handle them individually.
 	lines := strings.Split(text, "\n")
 
-	// Find the start and end of the actual content, trimming empty or whitespace-only lines
-	// from the beginning and end of the input.
+	// Find content boundaries
 	start := 0
 	for start < len(lines) && strings.TrimSpace(lines[start]) == "" {
 		start++
 	}
+
 	end := len(lines)
 	for end > start && strings.TrimSpace(lines[end-1]) == "" {
 		end--
 	}
+
 	lines = lines[start:end]
 
-	// If there are no content lines after trimming, return empty results.
 	if len(lines) == 0 {
-		return nil, nil
+		return [][]string{}, nil
 	}
 
-	// Pre-allocate a slice to hold the parsed table data.
-	tableData := make([][]string, len(lines))
+	// Parse first non-empty row to determine column count
 	var columnCount int
 
-	// Iterate over each line to parse it into columns.
-	for i, line := range lines {
-		row := strings.Split(line, "\t")
-
-		// For the first row (header), establish the expected number of columns.
-		if i == 0 {
-			columnCount = len(row)
-		} else if len(row) != columnCount {
-			// For subsequent rows, ensure the column count is consistent.
-			return nil, fmt.Errorf("%w: row %d", ErrInconsistentColumnCount, i+1)
+	for index, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine == "" {
+			continue
 		}
-		tableData[i] = row
+
+		firstRow := parseRow(trimmedLine)
+		if len(firstRow) == 0 {
+			continue
+		}
+
+		columnCount = len(firstRow)
+		lines[index] = trimmedLine // Update with trimmed version
+
+		break
 	}
 
-	// Return the parsed table and no error.
+	if columnCount == 0 {
+		return [][]string{}, nil
+	}
+
+	// Parse all rows
+	tableData := make([][]string, 0, len(lines))
+	for index, line := range lines {
+		row := parseRow(line)
+		if len(row) == 0 {
+			// Empty row - create with expected column count
+			row = make([]string, columnCount)
+		} else if len(row) != columnCount {
+			return nil, fmt.Errorf("%w: row %d (expected %d columns, got %d): %q",
+				ErrInconsistentColumnCount, index+1, columnCount, len(row), strings.TrimSpace(line))
+		}
+
+		tableData = append(tableData, row)
+	}
+
 	return tableData, nil
 }
 
@@ -67,44 +103,71 @@ func parseTable(text string) ([][]string, error) {
 // properly spaced vertical bars for better readability.
 //
 // This function uses the 'go-pretty' library to generate the Markdown table.
+// The library handles pipe escaping automatically. No additional escaping
+// is needed since cells from tab-delimited data won't contain newlines.
 //
-// The function returns an error if the input has inconsistent column counts.
+// Returns an empty string (not an error) for empty input. Errors occur only
+// for parsing failures (inconsistent column counts).
 func Markdown(text string) (string, error) {
 	tableData, err := parseTable(text)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to parse table: %w", err)
 	}
 
-	// If there's no data after parsing (e.g., empty input), return an empty string.
 	if len(tableData) == 0 {
 		return "", nil
 	}
 
+	// Validate consistency (should be guaranteed by parseTable, but defensive)
+	expectedCols := len(tableData[0])
+	for i, row := range tableData {
+		if len(row) != expectedCols {
+			return "", fmt.Errorf("internal consistency error: row %d has %d columns, expected %d",
+				i, len(row), expectedCols)
+		}
+	}
+
 	var out strings.Builder
+	out.Grow(1024) // Pre-allocate capacity for better performance
+
 	t := table.NewWriter()
 	t.SetOutputMirror(&out)
 
-	// The first row of the parsed data is treated as the table header.
-	header := make(table.Row, 0, len(tableData[0]))
-	for _, h := range tableData[0] {
-		header = append(header, h)
+	// Add header - no escaping needed
+	headerRow := make(table.Row, len(tableData[0]))
+	for index, cell := range tableData[0] {
+		headerRow[index] = cell // Already trimmed by parseRow
 	}
-	t.AppendHeader(header)
 
-	// The remaining rows are added to the table body.
+	t.AppendHeader(headerRow)
+
+	// Add body rows if they exist
 	if len(tableData) > 1 {
 		for _, rowData := range tableData[1:] {
-			row := make(table.Row, 0, len(rowData))
-			for _, cell := range rowData {
-				row = append(row, cell)
+			row := make(table.Row, len(rowData))
+			for i, cell := range rowData {
+				row[i] = cell // Already trimmed by parseRow
 			}
+
 			t.AppendRow(row)
 		}
 	}
 
+	// Optional: Configure column widths for better readability
+	columnConfigs := make([]table.ColumnConfig, expectedCols)
+	for i := range expectedCols {
+		columnConfigs[i] = table.ColumnConfig{
+			Number:   i,
+			WidthMax: 50, // Adjust based on your needs
+		}
+	}
+
+	t.SetColumnConfigs(columnConfigs)
+
 	t.RenderMarkdown()
 
-	// The go-pretty library adds a trailing newline, which we trim to ensure
-	// consistent output behavior.
-	return strings.TrimSuffix(out.String(), "\n"), nil
+	// Trim trailing newline for consistent output
+	result := out.String()
+
+	return strings.TrimSuffix(result, "\n"), nil
 }
