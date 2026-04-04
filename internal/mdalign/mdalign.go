@@ -18,30 +18,35 @@ var ErrInconsistentColumnCount = errors.New("row has inconsistent column count")
 // table separator to be compliant with the specification.
 const minSeparatorWidth = 3
 
+func formatRow(cells []string, columnWidths []int) string {
+	formattedCells := make([]string, len(cells))
+	for i, cell := range cells {
+		formattedCells[i] = fmt.Sprintf("%-*s", columnWidths[i], cell)
+	}
+	return "| " + strings.Join(formattedCells, " | ") + " |"
+}
+
 // Align formats a Markdown table for uniform column alignment. It accepts a
 // slice of strings, where each string is a row of the table, and returns a
 // new slice with each column padded for readability.
 // It returns an error if the table has an inconsistent column count.
+// formatRow formats a single row with proper padding.
 func Align(rows []string) ([]string, error) {
 	table, columnWidths, err := parseMarkdownTable(rows)
 	if err != nil {
 		return nil, err
 	}
-
-	// If the table was empty or only contained a separator, return as-is.
 	if len(table) == 0 {
 		return rows, nil
 	}
 
-	formattedRows := formatRows(table, columnWidths)
-	headerSeparator := buildHeaderSeparator(columnWidths)
-	// The original table must have at least a header and one data row
-	// (or just a header) to be considered valid for inserting a separator.
-	if len(formattedRows) > 0 {
-		formattedRows = insertHeaderSeparator(formattedRows, headerSeparator)
+	result := make([]string, 0, len(table)+1)
+	result = append(result, formatRow(table[0], columnWidths))
+	result = append(result, buildHeaderSeparator(columnWidths))
+	for _, row := range table[1:] {
+		result = append(result, formatRow(row, columnWidths))
 	}
-
-	return formattedRows, nil
+	return result, nil
 }
 
 // isSeparatorRow checks if a given line from a Markdown table is the
@@ -112,26 +117,6 @@ func parseMarkdownTable(rows []string) ([][]string, []int, error) {
 	return tableData, columnWidths, nil
 }
 
-// formatRows formats the rows of the Markdown table. Each column is padded
-// with spaces to match the calculated maximum width for that column.
-// It returns a slice of formatted Markdown rows.
-func formatRows(table [][]string, columnWidths []int) []string {
-	formattedRows := make([]string, len(table))
-
-	for rowIndex, row := range table {
-		formattedRow := make([]string, len(row))
-
-		for columnIndex, column := range row {
-			formattedRow[columnIndex] = fmt.Sprintf("%-*s",
-				columnWidths[columnIndex], column)
-		}
-
-		formattedRows[rowIndex] = "| " + strings.Join(formattedRow, " | ") + " |"
-	}
-
-	return formattedRows
-}
-
 // buildHeaderSeparator creates a Markdown header separator row using
 // hyphens, sized according to the calculated column widths. It ensures
 // that the separator width is at least minSeparatorWidth hyphens to be
@@ -147,20 +132,4 @@ func buildHeaderSeparator(columnWidths []int) string {
 	}
 
 	return "| " + strings.Join(separatorCells, " | ") + " |"
-}
-
-// insertHeaderSeparator inserts the header separator row into the table
-// after the header row (which is the first row).
-// It returns the updated slice of table rows.
-func insertHeaderSeparator(rows []string, separator string) []string {
-	if len(rows) == 0 {
-		return rows
-	}
-
-	// If there is only a header row, append the separator.
-	if len(rows) == 1 {
-		return append(rows, separator)
-	}
-	// Otherwise, insert it after the header.
-	return append([]string{rows[0], separator}, rows[1:]...)
 }
