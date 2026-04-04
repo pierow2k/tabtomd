@@ -7,48 +7,42 @@ import (
 )
 
 // Test_parseRow tests the parseRow function with various input scenarios.
-//
-
 func Test_parseRow(t *testing.T) {
 	t.Parallel()
 
-	type args struct {
-		line string
-	}
-
 	tests := []struct {
 		name string
-		args args
+		line string
 		want []string
 	}{
 		{
 			name: "normal row",
-			args: args{line: "cell1\tcell2\tcell3"},
+			line: "cell1\tcell2\tcell3",
 			want: []string{"cell1", "cell2", "cell3"},
 		},
 		{
 			name: "row with leading/trailing spaces in cells",
-			args: args{line: "  cell1  \t  cell2  \t  cell3  "},
+			line: "  cell1  \t  cell2  \t  cell3  ",
 			want: []string{"cell1", "cell2", "cell3"},
 		},
 		{
 			name: "row with empty cells",
-			args: args{line: "cell1\t\tcell3"},
+			line: "cell1\t\tcell3",
 			want: []string{"cell1", "", "cell3"},
 		},
 		{
 			name: "row with only tabs",
-			args: args{line: "\t\t"},
+			line: "\t\t",
 			want: []string{"", "", ""},
 		},
 		{
 			name: "empty line",
-			args: args{line: ""},
-			want: []string{},
+			line: "",
+			want: nil,
 		},
 		{
 			name: "single cell",
-			args: args{line: "cell1"},
+			line: "cell1",
 			want: []string{"cell1"},
 		},
 	}
@@ -56,7 +50,7 @@ func Test_parseRow(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got := parseRow(testCase.args.line); !reflect.DeepEqual(got, testCase.want) {
+			if got := parseRow(testCase.line); !reflect.DeepEqual(got, testCase.want) {
 				t.Errorf("parseRow() = %v, want %v", got, testCase.want)
 			}
 		})

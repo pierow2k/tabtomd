@@ -22,17 +22,13 @@ var ErrInconsistentColumnCount = errors.New("row has inconsistent column count")
 // parseRow splits a tab-delimited line into cells and trims whitespace from each.
 func parseRow(line string) []string {
 	if line == "" {
-		return []string{}
+		return nil
 	}
-
 	cells := strings.Split(line, "\t")
-
-	row := make([]string, len(cells))
 	for i, cell := range cells {
-		row[i] = strings.TrimSpace(cell)
+		cells[i] = strings.TrimSpace(cell)
 	}
-
-	return row
+	return cells
 }
 
 // trimEmptyLines removes leading and trailing empty lines from lines.
