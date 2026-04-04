@@ -37,17 +37,15 @@ func parseRow(line string) []string {
 
 // trimEmptyLines removes leading and trailing empty lines from lines.
 func trimEmptyLines(lines []string) []string {
-	start := 0
-	for start < len(lines) && strings.TrimSpace(lines[start]) == "" {
-		start++
+	for len(lines) > 0 && strings.TrimSpace(lines[0]) == "" {
+		lines = lines[1:]
 	}
 
-	end := len(lines)
-	for end > start && strings.TrimSpace(lines[end-1]) == "" {
-		end--
+	for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
+		lines = lines[:len(lines)-1]
 	}
 
-	return lines[start:end]
+	return lines
 }
 
 // determineColumnCount determines the expected column count from the first
