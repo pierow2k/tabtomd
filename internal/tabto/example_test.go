@@ -3,6 +3,7 @@
 package tabto_test
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/pierow2k/tabtomd/internal/tabto"
@@ -133,14 +134,14 @@ func ExampleMarkdown_multiByteCharacters() {
 	// | 世界 | b |
 }
 
-// Markdown returns an error when the input data has an inconsistent
-// number of columns. The error message includes the row number and
-// expected/actual counts.
+// Markdown returns the sentinel error ErrInconsistentColumnCount when the
+// input data has an inconsistent number of columns. The error message
+// includes the row number and expected/actual counts.
 func ExampleMarkdown_inconsistentColumns() {
 	input := "h1\th2\nh1" // Second row has fewer columns
 
 	_, err := tabto.Markdown(input)
-	if err != nil {
+	if errors.Is(errors.Unwrap(err), tabto.ErrInconsistentColumnCount) {
 		fmt.Println(err)
 
 		return
