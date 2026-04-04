@@ -146,7 +146,7 @@ func ExampleMarkdown_inconsistentColumns() {
 		return
 	}
 	// Output:
-	// failed to parse table: row has inconsistent column count: row 2 (expected 2 columns, got 1): "h1"
+	// failed to parse table: row has inconsistent column count: row 2 (expected 2 columns, got 1)
 }
 
 // Leading and trailing empty lines are trimmed, but internal empty lines

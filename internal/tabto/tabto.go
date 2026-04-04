@@ -19,15 +19,18 @@ const (
 // varying numbers of columns, indicating malformed tab-delimited data.
 var ErrInconsistentColumnCount = errors.New("row has inconsistent column count")
 
-// parseRow splits a tab-delimited line into cells and trims whitespace from each.
+// parseRow splits a tab-delimited line into cells and trims whitespace
+// from each.
 func parseRow(line string) []string {
 	if line == "" {
 		return nil
 	}
+
 	cells := strings.Split(line, "\t")
 	for i, cell := range cells {
 		cells[i] = strings.TrimSpace(cell)
 	}
+
 	return cells
 }
 
@@ -91,24 +94,6 @@ func validateAndParseRow(
 	return row, nil
 }
 
-// parseTableRows parses all rows after determining the expected column
-// count. It validates each row and builds the complete table data
-// structure.
-func parseTableRows(lines []string, expectedCols int) ([][]string, error) {
-	tableData := make([][]string, 0, len(lines))
-
-	for index, line := range lines {
-		row, err := validateAndParseRow(line, expectedCols, index)
-		if err != nil {
-			return nil, err
-		}
-
-		tableData = append(tableData, row)
-	}
-
-	return tableData, nil
-}
-
 // parseTable parses tab-delimited text into a two-dimensional slice
 // of strings, representing the table's rows and columns. It trims
 // leading/trailing empty lines and whitespace from cells. Empty input
@@ -117,21 +102,38 @@ func parseTableRows(lines []string, expectedCols int) ([][]string, error) {
 // Returns the parsed table or an error if the data is inconsistent.
 func parseTable(text string) ([][]string, error) {
 	lines := strings.Split(text, "\n")
-
-	// Trim empty lines from beginning and end
 	lines = trimEmptyLines(lines)
 
 	if len(lines) == 0 {
 		return [][]string{}, nil
 	}
 
-	// Determine expected column count from first valid row
-	expectedCols := determineColumnCount(lines)
+	tableData := make([][]string, 0, len(lines))
 
-	// Parse and validate all rows
-	tableData, err := parseTableRows(lines, expectedCols)
-	if err != nil {
-		return nil, err
+	var expectedCols int
+
+	for lineIndex, line := range lines {
+		row := parseRow(line)
+
+		// Skip empty rows for determining column count
+		if len(row) == 0 || (len(row) == 1 && row[0] == "") {
+			if expectedCols == 0 {
+				continue
+			}
+
+			row = make([]string, expectedCols)
+		}
+
+		if expectedCols == 0 {
+			expectedCols = len(row)
+		} else if len(row) != expectedCols {
+			return nil, fmt.Errorf(
+				"%w: row %d (expected %d columns, got %d)",
+				ErrInconsistentColumnCount, lineIndex+1, expectedCols, len(row),
+			)
+		}
+
+		tableData = append(tableData, row)
 	}
 
 	return tableData, nil
