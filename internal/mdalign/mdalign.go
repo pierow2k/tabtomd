@@ -122,8 +122,8 @@ func formatRows(table [][]string, columnWidths []int) []string {
 		formattedRow := make([]string, len(row))
 
 		for columnIndex, column := range row {
-			padding := columnWidths[columnIndex] - utf8.RuneCountInString(column)
-			formattedRow[columnIndex] = column + strings.Repeat(" ", padding)
+			formattedRow[columnIndex] = fmt.Sprintf("%-*s",
+				columnWidths[columnIndex], column)
 		}
 
 		formattedRows[rowIndex] = "| " + strings.Join(formattedRow, " | ") + " |"
