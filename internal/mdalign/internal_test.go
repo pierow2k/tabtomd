@@ -1,4 +1,6 @@
 // White-box tests for unexported functions in the mdalign package.
+//
+//nolint:gosmopolitan,funlen
 package mdalign
 
 import (
@@ -6,7 +8,8 @@ import (
 	"testing"
 )
 
-// Test_isSeparatorRow tests the isSeparatorRow function with various input scenarios.
+// Test_isSeparatorRow tests the isSeparatorRow function with various input
+// scenarios.
 func Test_isSeparatorRow(t *testing.T) {
 	t.Parallel()
 
@@ -42,9 +45,8 @@ func Test_isSeparatorRow(t *testing.T) {
 	}
 }
 
-// Test_parseMarkdownTable tests the parseMarkdownTable function with various input scenarios.
-//
-//nolint:gosmopolitan,funlen
+// Test_parseMarkdownTable tests the parseMarkdownTable function with
+// various input scenarios.
 func Test_parseMarkdownTable(t *testing.T) {
 	t.Parallel()
 
@@ -120,7 +122,8 @@ func Test_parseMarkdownTable(t *testing.T) {
 	}
 }
 
-// Test_buildHeaderSeparator tests the buildHeaderSeparator function with various column width scenarios.
+// Test_buildHeaderSeparator tests the buildHeaderSeparator function with
+// various column width scenarios.
 func Test_buildHeaderSeparator(t *testing.T) {
 	t.Parallel()
 
@@ -162,6 +165,63 @@ func Test_buildHeaderSeparator(t *testing.T) {
 			got := buildHeaderSeparator(testTable.columnWidths)
 			if got != testTable.want {
 				t.Errorf("buildHeaderSeparator() = %v, want %v", got, testTable.want)
+			}
+		})
+	}
+}
+
+func Test_formatRow(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		cells        []string
+		columnWidths []int
+		want         string
+	}{
+		{
+			name:         "standard row with padding",
+			cells:        []string{"Alice", "25"},
+			columnWidths: []int{10, 5},
+			want:         "| Alice      | 25    |",
+		},
+		{
+			name:         "exact width",
+			cells:        []string{"Bob", "300"},
+			columnWidths: []int{3, 3},
+			want:         "| Bob | 300 |",
+		},
+		{
+			name:         "empty cells",
+			cells:        []string{"", "Data"},
+			columnWidths: []int{3, 4},
+			want:         "|     | Data |",
+		},
+		{
+			name:         "multi-byte characters",
+			cells:        []string{"你好", "a"},
+			columnWidths: []int{2, 1},
+			want:         "| 你好 | a |",
+		},
+		{
+			name:         "single column",
+			cells:        []string{"Header"},
+			columnWidths: []int{8},
+			want:         "| Header   |",
+		},
+		{
+			name:         "empty row",
+			cells:        []string{},
+			columnWidths: []int{},
+			want:         "|  |",
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := formatRow(testCase.cells, testCase.columnWidths); got != testCase.want {
+				t.Errorf("formatRow() = %v, want %v", got, testCase.want)
 			}
 		})
 	}
