@@ -21,8 +21,7 @@ const minSeparatorWidth = 3
 // Align formats a Markdown table for uniform column alignment. It accepts a
 // slice of strings, where each string is a row of the table, and returns a
 // new slice with each column padded for readability.
-//
-// The function returns an error if the table has an inconsistent column count.
+// It returns an error if the table has an inconsistent column count.
 func Align(rows []string) ([]string, error) {
 	table, columnWidths, err := parseMarkdownTable(rows)
 	if err != nil {
@@ -61,8 +60,7 @@ func isSeparatorRow(row string) bool {
 // parseMarkdownTable parses rows of a Markdown table into a 2D slice of
 // cells, while calculating the maximum width of each column. It ignores the
 // header separator row during parsing.
-//
-// Returns the parsed table, column widths, and an error if the data is inconsistent.
+// It returns the parsed table, column widths, and an error if the data is inconsistent.
 func parseMarkdownTable(rows []string) ([][]string, []int, error) {
 	var (
 		columnWidths []int
@@ -116,8 +114,7 @@ func parseMarkdownTable(rows []string) ([][]string, []int, error) {
 
 // formatRows formats the rows of the Markdown table. Each column is padded
 // with spaces to match the calculated maximum width for that column.
-//
-// Returns a slice of formatted Markdown rows.
+// It returns a slice of formatted Markdown rows.
 func formatRows(table [][]string, columnWidths []int) []string {
 	formattedRows := make([]string, len(table))
 
@@ -135,16 +132,15 @@ func formatRows(table [][]string, columnWidths []int) []string {
 	return formattedRows
 }
 
-// buildHeaderSeparator creates a Markdown header separator row using hyphens,
-// sized according to the calculated column widths.
-//
-// Returns the formatted header separator string.
+// buildHeaderSeparator creates a Markdown header separator row using
+// hyphens, sized according to the calculated column widths. It ensures
+// that the separator width is at least minSeparatorWidth hyphens to be
+// compliant with the Markdown specification (at least 3 hyphens).
+// It returns the formatted header separator string.
 func buildHeaderSeparator(columnWidths []int) string {
 	separatorCells := make([]string, len(columnWidths))
 
 	for index, width := range columnWidths {
-		// Ensure the separator width is at least 3 hyphens to be compliant
-		// with the Markdown specification (at least 3 hyphens).
 		separatorWidth := max(width, minSeparatorWidth)
 
 		separatorCells[index] = strings.Repeat("-", separatorWidth)
@@ -155,15 +151,13 @@ func buildHeaderSeparator(columnWidths []int) string {
 
 // insertHeaderSeparator inserts the header separator row into the table
 // after the header row (which is the first row).
-//
-// Returns the updated slice of table rows.
+// It returns the updated slice of table rows.
 func insertHeaderSeparator(rows []string, separator string) []string {
-	// If there are no rows, there's nothing to do.
 	if len(rows) == 0 {
 		return rows
 	}
 
-	// If there's only a header row, append the separator.
+	// If there is only a header row, append the separator.
 	if len(rows) == 1 {
 		return append(rows, separator)
 	}
