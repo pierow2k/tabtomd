@@ -55,10 +55,11 @@ func trimEmptyLines(lines []string) []string {
 	return lines[start:end]
 }
 
-// findFirstNonEmptyRow finds the first non-empty row in the lines and returns its
-// parsed row data and index. Returns empty slice and -1 if no valid row is found.
-func findFirstNonEmptyRow(lines []string) ([]string, int) {
-	for index, line := range lines {
+// determineColumnCount determines the expected column count from the first
+// valid row.
+// Returns 0 if no valid row is found.
+func determineColumnCount(lines []string) int {
+	for _, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
 		if trimmedLine == "" {
 			continue
@@ -66,24 +67,10 @@ func findFirstNonEmptyRow(lines []string) ([]string, int) {
 
 		firstRow := parseRow(trimmedLine)
 
-		lines[index] = trimmedLine
-
-		return firstRow, index
+		return len(firstRow)
 	}
 
-	return []string{}, -1
-}
-
-// determineColumnCount determines the expected column count from the first
-// valid row.
-// Returns 0 if no valid row is found.
-func determineColumnCount(lines []string) int {
-	firstRow, validIndex := findFirstNonEmptyRow(lines)
-	if validIndex == -1 {
-		return 0
-	}
-
-	return len(firstRow)
+	return 0
 }
 
 // validateAndParseRow validates a single row against the expected column
