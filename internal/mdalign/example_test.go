@@ -3,6 +3,7 @@
 package mdalign_test
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/pierow2k/tabtomd/internal/mdalign"
@@ -10,18 +11,16 @@ import (
 
 func ExampleAlign() {
 	rows := []string{
-		"| Name    | Age | City         |",
-		"|---------|-----|--------------|",
-		"| Alice   | 30  | New York     |",
-		"| Bob     | 25  | Los Angeles  |",
-		"| Charlie | 35  | San Francisco|",
+		"| Name | Age | City         |",
+		"|----|-----|----|",
+		"| Alice   |   30  |   New York     |",
+		"|  Bob     | 25  |  Los Angeles  |",
+		"| Charlie   | 35  | San Francisco|",
 	}
 
 	alignedRows, err := mdalign.Align(rows)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	for _, row := range alignedRows {
@@ -36,30 +35,25 @@ func ExampleAlign() {
 	// | Charlie | 35  | San Francisco |
 }
 
+// Align returns an empty output for an empty input.
 func ExampleAlign_emptyInput() {
 	rows := []string{}
 
 	alignedRows, err := mdalign.Align(rows)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	if len(alignedRows) == 0 {
 		fmt.Println("No rows to align.")
-
-		return
-	}
-
-	for _, row := range alignedRows {
-		fmt.Println(row)
 	}
 
 	// Output:
 	// No rows to align.
 }
 
+// Align returns the sentinel error ErrInconsistentColumnCount when the
+// input data has an inconsistent number of columns.
 func ExampleAlign_inconsistentColumns() {
 	rows := []string{
 		"| Name    | Age | City         |",
@@ -69,22 +63,17 @@ func ExampleAlign_inconsistentColumns() {
 		"| Charlie | 35  |", // Inconsistent column count
 	}
 
-	alignedRows, err := mdalign.Align(rows)
-	if err != nil {
+	_, err := mdalign.Align(rows)
+	if errors.Is(err, mdalign.ErrInconsistentColumnCount) {
 		fmt.Println("Error:", err)
-
-		return
-	}
-
-	for _, row := range alignedRows {
-		fmt.Println(row)
 	}
 
 	// Output:
 	// Error: row has inconsistent column count: row 5
 }
 
-func ExampleAlign_specialCharacters() {
+// Align properly handles escaped characters in the input.
+func ExampleAlign_escapedCharacters() {
 	rows := []string{
 		"| Name    | Age | City         |",
 		"|---------|-----|--------------|",
@@ -95,9 +84,7 @@ func ExampleAlign_specialCharacters() {
 
 	alignedRows, err := mdalign.Align(rows)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	for _, row := range alignedRows {
@@ -112,6 +99,7 @@ func ExampleAlign_specialCharacters() {
 	// | Charlie | 35  | San Francisco |
 }
 
+// Align returns a formatted header row when given a single row to process.
 func ExampleAlign_singleRow() {
 	rows := []string{
 		"| Header1 | Header2 | Header3 |",
@@ -119,9 +107,7 @@ func ExampleAlign_singleRow() {
 
 	alignedRows, err := mdalign.Align(rows)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	for _, row := range alignedRows {
@@ -141,9 +127,7 @@ func ExampleAlign_onlyHeaderAndSeparator() {
 
 	alignedRows, err := mdalign.Align(rows)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	for _, row := range alignedRows {
@@ -155,9 +139,8 @@ func ExampleAlign_onlyHeaderAndSeparator() {
 	// | ------ |
 }
 
-// ExampleAlign_multiByteCharacters demonstrates the handling of multi-byte
-// characters. Most notably, it shows that the table does not align
-// properly with characters that occupy more than one byte, such as Chinese
+// Align handles multi-byte characters. Notably, the table align properly
+// with characters that occupy more than one byte, such as Chinese
 // characters.
 //
 //nolint:gosmopolitan
@@ -170,9 +153,7 @@ func ExampleAlign_multiByteCharacters() {
 
 	alignedRows, err := mdalign.Align(rows)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	for _, row := range alignedRows {
@@ -193,9 +174,7 @@ func ExampleAlign_malformedRow() {
 
 	alignedRows, err := mdalign.Align(rows)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	if len(alignedRows) == 0 {
