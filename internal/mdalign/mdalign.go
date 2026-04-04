@@ -14,10 +14,6 @@ import (
 // table have varying numbers of columns.
 var ErrInconsistentColumnCount = errors.New("row has inconsistent column count")
 
-// minSeparatorWidth is the minimum number of hyphens required for a Markdown
-// table separator to be compliant with the specification.
-const minSeparatorWidth = 3
-
 func formatRow(cells []string, columnWidths []int) string {
 	formattedCells := make([]string, len(cells))
 	for i, cell := range cells {
@@ -123,6 +119,10 @@ func parseMarkdownTable(rows []string) ([][]string, []int, error) {
 // compliant with the Markdown specification (at least 3 hyphens).
 // It returns the formatted header separator string.
 func buildHeaderSeparator(columnWidths []int) string {
+	// minSeparatorWidth is the minimum wifth required for a Markdown
+	// table separator to be compliant with the specification.
+	const minSeparatorWidth = 3
+
 	separatorCells := make([]string, len(columnWidths))
 
 	for index, width := range columnWidths {
