@@ -22,45 +22,44 @@ documentation, reports, or any structured data presentations.
 <!-- TABLE OF CONTENTS -->
 <details closed="closed">
   <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
-<li><a href="#usage">Usage</a></li>
-<li><a href="#commands">Commands</a></li>
-<li><a href="#flags">Flags</a></li>
-<li><a href="#examples">Examples</a></li>
-<li><a href="#installation">Installation</a></li>
-<li><a href="#getting-help">Getting Help</a></li>
-<li><a href="#contributing">Contributing</a></li>
-<li><a href="#license">License</a></li>
+
+- [Usage](#usage)
+  - [Flags](#flags)
+- [Examples](#examples)
+  - [Convert Clipboard Data to Markdown Table](#convert-clipboard-data-to-markdown-table)
+  - [Convert Tab-Delimited File to Markdown Table](#convert-tab-delimited-file-to-markdown-table)
+  - [Save Markdown Table to a File](#save-markdown-table-to-a-file)
+  - [Paste Markdown Table to the Clipboard](#paste-markdown-table-to-the-clipboard)
+  - [Suppressing Status Messages](#suppressing-status-messages)
+  - [Avoid alignment with the `--no-pretty` flag](#avoid-alignment-with-the---no-pretty-flag)
+- [Installation](#installation)
+- [License](#license)
+
 </details>
 
 ## Usage
 
-```bash
-tabtomd [COMMAND] [OPTIONS]
+```text
+tabtomd [flags]
 ```
-
-### Commands
-
-| Command      | Description                                                |  
-| ------------ | ---------------------------------------------------------- |  
-| `completion` | Generate an autocompletion script for the specified shell. |  
-| `file`       | Convert a tab-delimited file to a Markdown table.          |  
-| `help`       | Display help information for any command.                  |  
-| `paste`      | Convert tab-delimited data from the system clipboard.      |  
-| `version`    | Display the `tabtomd` version and build information.       |  
 
 ### Flags
 
-| Flag                  | Description                                                   |
-|-----------------------|---------------------------------------------------------------|
-| `--output <file>`     | Save the generated Markdown table to a file.                  |
-| `--pretty`            | Align columns in the Markdown table for improved readability. |
-| `--print`             | Print the Markdown table to the terminal.                     |
+| Short | Long              | Description                                     |
+| ----- | ----------------- | ----------------------------------------------- |
+| `-h`  | `--help`          | Show help and usage information                 |
+| `-i`  | `--input` string  | Read input from file                            |
+| `-n`  | `--no-pretty`     | Disable column alignment (output compact table) |
+| `-o`  | `--output` string | Write output to file                            |
+| `-p`  | `--paste`         | Paste results to the clipboard                  |
+| `-q`  | `--quiet`         | Suppress status messages                        |
+| `-v`  | `--version`       | Show version, build details, and license        |
 
 ## Examples
 
 ### Convert Clipboard Data to Markdown Table
 
-If the clipboard contains:
+If the clipboard contains tab-delimited data such as this:
 
 ```text
 Name	Species	Gender
@@ -71,121 +70,100 @@ Prince Eric	Human	Male
 Ursula	Octopus	Female
 ```
 
-Run:
+Running `tabtomd` without any options produces output like this:
 
 ```bash
-tabtomd paste --print
-```
-
-Output:
-
-```markdown
-| Name | Species | Gender |
-| ----- | ----- | ----- |
-| Ariel | Mermaid | Female |
-| Sebastian | Crab | Male |
-| Chef Louis | Human | Male |
-| Prince Eric | Human | Male |
-| Ursula | Octopus | Female |
-```
-
-### Aligned Markdown Table with `--pretty`
-
-```bash
-tabtomd paste --pretty --print
-```
-
-Output:
-
-```markdown
+$ tabtomd
 | Name        | Species | Gender |
-|-------------|---------|--------|
+| ----------- | ------- | ------ |
 | Ariel       | Mermaid | Female |
 | Sebastian   | Crab    | Male   |
 | Chef Louis  | Human   | Male   |
 | Prince Eric | Human   | Male   |
 | Ursula      | Octopus | Female |
+$
+```
+
+Which will in turn render Markdown like this:
+
+| Name        | Species | Gender |
+| ----------- | ------- | ------ |
+| Ariel       | Mermaid | Female |
+| Sebastian   | Crab    | Male   |
+| Chef Louis  | Human   | Male   |
+| Prince Eric | Human   | Male   |
+| Ursula      | Octopus | Female |
+
+### Convert Tab-Delimited File to Markdown Table
+
+You can read input from a tab-delimited file using the `--input` flag:
+
+```bash
+$ tabtomd --input tsv_file.txt
+| Name        | Species | Gender |
+| ----------- | ------- | ------ |
+| Ariel       | Mermaid | Female |
+| Sebastian   | Crab    | Male   |
+| Chef Louis  | Human   | Male   |
+| Prince Eric | Human   | Male   |
+| Ursula      | Octopus | Female |
+$
 ```
 
 ### Save Markdown Table to a File
 
+You can specify a file name using the `--output` flag to save the
+generated Markdown table to a file:
+
 ```bash
-tabtomd paste --output markdown_table.md --pretty
+$ tabtomd --output markdown_table.md
+INFO Markdown table successfully written to markdown_table.md
+$
 ```
 
-### Convert Tab-Delimited File to Markdown Table
+### Paste Markdown Table to the Clipboard
 
-#### Print to Terminal
+You can paste the output of `tabtomd` to the clipboard using the `--paste` flag.
 
 ```bash
-tabtomd file tsv_file.txt --print
+$ tabtomd --paste
+INFO Markdown table copied to clipboard.
+$
 ```
 
-#### Save to File with Alignment
+### Suppressing Status Messages
+
+When pasting the output of `tabtomd` to the clipboard or writing output
+to a file, log messages are sent to stderr. You can suppress these log
+messages using the `--quiet` flag.
 
 ```bash
-tabtomd file tsv_file.txt --output markdown_table.md --pretty
+$ tabtomd --quiet --output markdown_table.md
+$
+```
+
+### Avoid alignment with the `--no-pretty` flag
+
+By default, the columns in the Markdown table are aligned. If you want to
+avoid the column alignment, use the `--no-pretty` flag:
+
+```bash
+$ tabtomd
+| Name | Species | Gender |
+| --- | --- | --- |
+| Ariel | Mermaid | Female |
+| Sebastian | Crab | Male |
+| Chef Louis | Human | Male |
+| Prince Eric | Human | Male |
+| Ursula | Octopus | Female |
+$
 ```
 
 ## Installation
 
-### Precompiled Binaries
-
 Precompiled binaries are available for most popular platforms. Visit the
-[Releases](https://github.com/pierow2k/tabtomd/releases) page to download the
-appropriate binary for your operating system and architecture.
-
-### Install Using `go install`
-
-First, make sure you have [Go](https://golang.org/dl/) installed on your
-system.
-
-```bash
-go install github.com/pierow2k/tabtomd@latest
-```
-
-### Clone and Build
-
-Alternatively, you can clone the repository and build the application
-manually. Manual builds also require having [Go](https://golang.org/dl/)
-installed on your system.
-
-```bash
-git clone https://github.com/pierow2k/tabtomd.git
-cd tabtomd
-go build
-```
-
-## Getting Help
-
-Use the `--help` flag or the `help` command for detailed information on
-each command. For example:
-
-```bash
-tabtomd file --help
-```
-
-or
-
-```bash
-tabtomd help file
-```
-
-Have an idea for a new feature or noticed something that isn’t working
-quite right? [Open an issue](https://github.com/pierow2k/tabtomd/issues) to
-let us know. Your feedback helps us keep tabtomd reliable and feature-rich.
-
-## Contributing
-
-We welcome contributions! Here's how you can help:
-
-- **Submit a Pull Request**: If you’ve made improvements
-or fixed a bug, we’d love to see your work. [Submit a pull
-request](https://www.github.com/pierow2k/tabtomd/pulls) and share your
-changes with the community.
-
-We appreciate your support and contributions, which drive the continued
-growth and success of tabtomd. Thank you for being part of the journey!
+[Releases](https://github.com/pierow2k/tabtomd/releases) page to download
+the appropriate binary for your operating system and architecture.
 
 ## License
 
