@@ -15,14 +15,9 @@ const (
 	defaultMaxColumnWidth   = 50   // default maximum width for table columns
 )
 
-var (
-	// ErrInconsistentColumnCount is returned when rows in the input text have
-	// varying numbers of columns, indicating malformed tab-delimited data.
-	ErrInconsistentColumnCount = errors.New("row has inconsistent column count")
-	// ErrInternalConsistency is returned when an internal consistency error occurs
-	// during table processing.
-	ErrInternalConsistency = errors.New("internal consistency error")
-)
+// ErrInconsistentColumnCount is returned when rows in the input text have
+// varying numbers of columns, indicating malformed tab-delimited data.
+var ErrInconsistentColumnCount = errors.New("row has inconsistent column count")
 
 // parseRow splits a tab-delimited line into cells and trims whitespace from each.
 func parseRow(line string) []string {
@@ -158,20 +153,6 @@ func renderTable(text string, render func(table.Writer)) (string, error) {
 
 	if len(tableData) == 0 {
 		return "", nil
-	}
-
-	// Validate consistency (should be guaranteed by parseTable, but defensive)
-	expectedCols := len(tableData[0])
-	for i, row := range tableData {
-		if len(row) != expectedCols {
-			return "", fmt.Errorf(
-				"%w: row %d has %d columns, expected %d",
-				ErrInternalConsistency,
-				i,
-				len(row),
-				expectedCols,
-			)
-		}
 	}
 
 	var out strings.Builder
