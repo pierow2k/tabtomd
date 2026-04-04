@@ -10,19 +10,19 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
-// defaultOutputBufferSize is the default initial buffer size for the output builder.
-const defaultOutputBufferSize = 1024
+const (
+	defaultOutputBufferSize = 1024 // default initial buffer size for the output builder
+	defaultMaxColumnWidth   = 50   // default maximum width for table columns
+)
 
-// defaultMaxColumnWidth is the default maximum width for table columns.
-const defaultMaxColumnWidth = 50
-
-// ErrInconsistentColumnCount is returned when rows in the input text have
-// varying numbers of columns, indicating malformed tab-delimited data.
-var ErrInconsistentColumnCount = errors.New("row has inconsistent column count")
-
-// ErrInternalConsistency is returned when an internal consistency error occurs
-// during table processing.
-var ErrInternalConsistency = errors.New("internal consistency error")
+var (
+	// ErrInconsistentColumnCount is returned when rows in the input text have
+	// varying numbers of columns, indicating malformed tab-delimited data.
+	ErrInconsistentColumnCount = errors.New("row has inconsistent column count")
+	// ErrInternalConsistency is returned when an internal consistency error occurs
+	// during table processing.
+	ErrInternalConsistency = errors.New("internal consistency error")
+)
 
 // parseRow splits a tab-delimited line into cells and trims whitespace from each.
 func parseRow(line string) []string {
@@ -40,7 +40,7 @@ func parseRow(line string) []string {
 	return row
 }
 
-// trimEmptyLines removes leading and trailing empty lines from the input lines.
+// trimEmptyLines removes leading and trailing empty lines from lines.
 func trimEmptyLines(lines []string) []string {
 	start := 0
 	for start < len(lines) && strings.TrimSpace(lines[start]) == "" {
@@ -66,7 +66,6 @@ func findFirstNonEmptyRow(lines []string) ([]string, int) {
 
 		firstRow := parseRow(trimmedLine)
 
-		// Update the line in place with the trimmed version
 		lines[index] = trimmedLine
 
 		return firstRow, index
@@ -75,7 +74,8 @@ func findFirstNonEmptyRow(lines []string) ([]string, int) {
 	return []string{}, -1
 }
 
-// determineColumnCount determines the expected column count from the first valid row.
+// determineColumnCount determines the expected column count from the first
+// valid row.
 // Returns 0 if no valid row is found.
 func determineColumnCount(lines []string) int {
 	firstRow, validIndex := findFirstNonEmptyRow(lines)
@@ -86,8 +86,9 @@ func determineColumnCount(lines []string) int {
 	return len(firstRow)
 }
 
-// validateAndParseRow validates a single row against the expected column count and
-// parses it. Empty rows are padded to match the expected column count.
+// validateAndParseRow validates a single row against the expected column
+// count and parses it. Empty rows are padded to match the expected column
+// count.
 func validateAndParseRow(
 	line string,
 	expectedCols int,
@@ -114,8 +115,9 @@ func validateAndParseRow(
 	return row, nil
 }
 
-// parseTableRows parses all rows after determining the expected column count.
-// It validates each row and builds the complete table data structure.
+// parseTableRows parses all rows after determining the expected column
+// count. It validates each row and builds the complete table data
+// structure.
 func parseTableRows(lines []string, expectedCols int) ([][]string, error) {
 	tableData := make([][]string, 0, len(lines))
 
@@ -131,12 +133,12 @@ func parseTableRows(lines []string, expectedCols int) ([][]string, error) {
 	return tableData, nil
 }
 
-// parseTable parses tab-delimited text into a two-dimensional slice of strings,
-// representing the table's rows and columns. It trims leading/trailing empty lines
-// and whitespace from cells. Empty input returns an empty table. It ensures that
-// all non-empty rows have the same number of columns.
-//
-// Returns the parsed table and an error if the data is inconsistent.
+// parseTable parses tab-delimited text into a two-dimensional slice
+// of strings, representing the table's rows and columns. It trims
+// leading/trailing empty lines and whitespace from cells. Empty input
+// returns an empty table. It ensures that all non-empty rows have the same
+// number of columns.
+// Returns the parsed table or an error if the data is inconsistent.
 func parseTable(text string) ([][]string, error) {
 	lines := strings.Split(text, "\n")
 
@@ -159,93 +161,9 @@ func parseTable(text string) ([][]string, error) {
 	return tableData, nil
 }
 
-// Markdown converts tab-delimited text into a Markdown table with
-// adjusted column widths for uniform alignment. The resulting table includes
-// properly spaced vertical bars for better readability.
-//
-// This function uses the 'go-pretty' library to generate the Markdown table.
-// The library handles pipe escaping automatically. No additional escaping
-// is needed since cells from tab-delimited data won't contain newlines.
-//
-// Returns an empty string (not an error) for empty input. Errors occur only
-// for parsing failures (inconsistent column counts).
-func Markdown(text string) (string, error) {
-	tableData, err := parseTable(text)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse table: %w", err)
-	}
-
-	if len(tableData) == 0 {
-		return "", nil
-	}
-
-	// Validate consistency (should be guaranteed by parseTable, but defensive)
-	expectedCols := len(tableData[0])
-	for i, row := range tableData {
-		if len(row) != expectedCols {
-			return "", fmt.Errorf(
-				"%w: row %d has %d columns, expected %d",
-				ErrInternalConsistency,
-				i,
-				len(row),
-				expectedCols,
-			)
-		}
-	}
-
-	var out strings.Builder
-	out.Grow(defaultOutputBufferSize) // Pre-allocate capacity for better performance
-
-	tableWriter := table.NewWriter()
-	tableWriter.SetOutputMirror(&out)
-
-	// Add header - no escaping needed
-	headerRow := make(table.Row, len(tableData[0]))
-	for index, cell := range tableData[0] {
-		headerRow[index] = cell // Already trimmed by parseRow
-	}
-
-	tableWriter.AppendHeader(headerRow)
-
-	// Add body rows if they exist
-	if len(tableData) > 1 {
-		for _, rowData := range tableData[1:] {
-			row := make(table.Row, len(rowData))
-			for i, cell := range rowData {
-				row[i] = cell // Already trimmed by parseRow
-			}
-
-			tableWriter.AppendRow(row)
-		}
-	}
-
-	// Optional: Configure column widths for better readability
-	columnConfigs := make([]table.ColumnConfig, expectedCols)
-	for i := range expectedCols {
-		columnConfigs[i] = table.ColumnConfig{
-			Number:   i,
-			WidthMax: defaultMaxColumnWidth, // Adjust based on your needs
-		}
-	}
-
-	tableWriter.SetColumnConfigs(columnConfigs)
-
-	tableWriter.RenderMarkdown()
-
-	// Trim trailing newline for consistent output
-	result := out.String()
-
-	return strings.TrimSuffix(result, "\n"), nil
-}
-
-// HTML converts tab-delimited text into an HTML table.
-//
-// This function uses the 'go-pretty' library to generate the HTML table.
-// The library handles HTML escaping automatically.
-//
-// Returns an empty string (not an error) for empty input. Errors occur only
-// for parsing failures (inconsistent column counts).
-func HTML(text string) (string, error) {
+// renderTable handles common table parsing and construction logic.
+// The render callback performs format-specific rendering.
+func renderTable(text string, render func(table.Writer)) (string, error) {
 	tableData, err := parseTable(text)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse table: %w", err)
@@ -275,27 +193,57 @@ func HTML(text string) (string, error) {
 	tableWriter := table.NewWriter()
 	tableWriter.SetOutputMirror(&out)
 
-	// Add header
 	headerRow := make(table.Row, len(tableData[0]))
-	for index, cell := range tableData[0] {
-		headerRow[index] = cell
+	for i, cell := range tableData[0] {
+		headerRow[i] = cell
 	}
 
 	tableWriter.AppendHeader(headerRow)
 
-	// Add body rows if they exist
-	if len(tableData) > 1 {
-		for _, rowData := range tableData[1:] {
-			row := make(table.Row, len(rowData))
-			for i, cell := range rowData {
-				row[i] = cell
-			}
-
-			tableWriter.AppendRow(row)
+	for _, rowData := range tableData[1:] {
+		row := make(table.Row, len(rowData))
+		for i, cell := range rowData {
+			row[i] = cell
 		}
+
+		tableWriter.AppendRow(row)
 	}
 
-	tableWriter.RenderHTML()
+	render(tableWriter)
 
 	return out.String(), nil
+}
+
+// Markdown converts tab-delimited text into a Markdown table with adjusted
+// column widths for uniform alignment. The resulting table includes
+// properly spaced vertical bars for better readability.
+// Returns errors for parsing failures (inconsistent column counts).
+func Markdown(text string) (string, error) {
+	result, err := renderTable(text, func(tableWriter table.Writer) {
+		cols := tableWriter.Length()
+
+		configs := make([]table.ColumnConfig, cols)
+		for i := range cols {
+			configs[i] = table.ColumnConfig{
+				Number:   i,
+				WidthMax: defaultMaxColumnWidth,
+			}
+		}
+
+		tableWriter.SetColumnConfigs(configs)
+		tableWriter.RenderMarkdown()
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSuffix(result, "\n"), nil
+}
+
+// HTML converts tab-delimited text into an HTML table.
+// Returns errors for parsing failures (inconsistent column counts).
+func HTML(text string) (string, error) {
+	return renderTable(text, func(tw table.Writer) {
+		tw.RenderHTML()
+	})
 }
