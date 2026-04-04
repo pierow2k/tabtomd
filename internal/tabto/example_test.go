@@ -8,16 +8,49 @@ import (
 	"github.com/pierow2k/tabtomd/internal/tabto"
 )
 
-// ExampleMarkdown demonstrates the use of the Markdown function to
-// convert tab delimited input into Markdown table format.
+// HTML converts tab delimited input into an HTML table.
+func ExampleHTML() {
+	input := "Name\tAge\tCity\nAlice\t30\tNew York\nBob\t25\tLos Angeles"
+
+	htmlTable, err := tabto.HTML(input)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(htmlTable)
+
+	// Output:
+	// <table class="go-pretty-table">
+	//   <thead>
+	//   <tr>
+	//     <th>Name</th>
+	//     <th>Age</th>
+	//     <th>City</th>
+	//   </tr>
+	//   </thead>
+	//   <tbody>
+	//   <tr>
+	//     <td>Alice</td>
+	//     <td>30</td>
+	//     <td>New York</td>
+	//   </tr>
+	//   <tr>
+	//     <td>Bob</td>
+	//     <td>25</td>
+	//     <td>Los Angeles</td>
+	//   </tr>
+	//   </tbody>
+	// </table>
+}
+
+// The Markdown function converts tab delimited input into Markdown table
+// format.
 func ExampleMarkdown() {
 	input := "Name\tAge\tCity\nAlice\t30\tNew York\nBob\t25\tLos Angeles"
 
 	markdownTable, err := tabto.Markdown(input)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	fmt.Println(markdownTable)
@@ -29,15 +62,13 @@ func ExampleMarkdown() {
 	// | Bob | 25 | Los Angeles |
 }
 
-// ExampleMarkdown_emptyInput demonstrates handling of empty input.
+// Empty input results in an empty string result.
 func ExampleMarkdown_emptyInput() {
 	input := ""
 
 	markdownTable, err := tabto.Markdown(input)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	if markdownTable == "" {
@@ -50,16 +81,13 @@ func ExampleMarkdown_emptyInput() {
 	// No data to convert.
 }
 
-// ExampleMarkdown_specialCharacters demonstrates handling of special characters
-// such as pipes and backslashes within the table data.
+// Special characters such as pipes and backslashes are escaped within the table data.
 func ExampleMarkdown_specialCharacters() {
 	input := "Name|Pipe\tAge\tCity\nAlice|test\t30\tNew York\nBob\\back\t25\tLos Angeles"
 
 	markdownTable, err := tabto.Markdown(input)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	fmt.Println(markdownTable)
@@ -70,17 +98,14 @@ func ExampleMarkdown_specialCharacters() {
 	// | Bob\back | 25 | Los Angeles |
 }
 
-// ExampleMarkdown_singleRow demonstrates the handling of a single row of
-// tab delimited characters. Note that the header separator defaults to
-// `---:` in this case.
+// A single row of tab delimited characters produces a header separator of
+// `---:`.
 func ExampleMarkdown_singleRow() {
 	input := "Header1\tHeader2\tHeader3"
 
 	markdownTable, err := tabto.Markdown(input)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	fmt.Println(markdownTable)
@@ -89,9 +114,8 @@ func ExampleMarkdown_singleRow() {
 	// | ---:| ---:| ---:|
 }
 
-// ExampleMarkdown_multiByteCharacters demonstrates handling of multi-byte
-// characters. The `go-pretty` library correctly handles these characters
-// when determining column widths for basic table generation.
+// multi-byte characters are handled correctly when determining column
+// widths for basic table generation.
 //
 //nolint:gosmopolitan
 func ExampleMarkdown_multiByteCharacters() {
@@ -99,9 +123,7 @@ func ExampleMarkdown_multiByteCharacters() {
 
 	markdownTable, err := tabto.Markdown(input)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	fmt.Println(markdownTable)
@@ -111,14 +133,14 @@ func ExampleMarkdown_multiByteCharacters() {
 	// | 世界 | b |
 }
 
-// ExampleMarkdown_inconsistentColumns demonstrates how the function returns
-// an error when the input data has an inconsistent number of columns.
+// Markdown returns an error when the input data has an inconsistent
+// number of columns. The error message includes the row number and
+// expected/actual counts.
 func ExampleMarkdown_inconsistentColumns() {
 	input := "h1\th2\nh1" // Second row has fewer columns
 
 	_, err := tabto.Markdown(input)
 	if err != nil {
-		// The error message includes the row number and expected/actual counts.
 		fmt.Println(err)
 
 		return
@@ -127,17 +149,14 @@ func ExampleMarkdown_inconsistentColumns() {
 	// failed to parse table: row has inconsistent column count: row 2 (expected 2 columns, got 1): "h1"
 }
 
-// ExampleMarkdown_withEmptyLines demonstrates that leading and trailing
-// empty lines are trimmed, but internal empty lines are preserved as empty rows
-// in the resulting table.
+// Leading and trailing empty lines are trimmed, but internal empty lines
+// are preserved as empty rows in the resulting table.
 func ExampleMarkdown_withEmptyLines() {
 	input := "\n\nName\tAge\n\nAlice\t30\n\n"
 
 	markdownTable, err := tabto.Markdown(input)
 	if err != nil {
-		fmt.Println("Error:", err)
-
-		return
+		panic(err)
 	}
 
 	fmt.Println(markdownTable)
