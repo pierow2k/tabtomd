@@ -169,11 +169,9 @@ func ReadTSV(filename string) (string, error) {
 // WriteMD writes a string containing a Markdown table to the specified file.
 // If the file does not exist, it is created. If the file exists, it is truncated.
 func WriteMD(filename, content string) error {
-	// defaultFilePerm defines the file permissions for created files.
-	// Owner: read/write, Group: read, Others: read (rw-r--r--)
-	const defaultFilePerm = 0o644
+	const markdownFilePerm os.FileMode = 0o644 // rw-r--r--
 
-	err := os.WriteFile(filename, []byte(content), defaultFilePerm)
+	err := os.WriteFile(filename, []byte(content), markdownFilePerm)
 	if err != nil {
 		return fmt.Errorf("failed to write content to file: %w", err)
 	}
