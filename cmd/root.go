@@ -21,11 +21,11 @@ import (
 // flags. It stores user preferences for input sources, output
 // destinations, and formatting behavior.
 type config struct {
-	outputFilename string
 	inputFileName  string
+	noPrettyFlag   bool
+	outputFilename string
 	pasteFlag      bool
 	quietFlag      bool
-	noPrettyFlag   bool
 }
 
 var (
@@ -105,17 +105,16 @@ func Execute() {
 
 func init() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
-
-	rootCmd.Flags().BoolVarP(&cfg.pasteFlag, "paste", "p", false,
-		"Paste results to the clipboard")
-	rootCmd.Flags().BoolVarP(&cfg.noPrettyFlag, "no-pretty", "n", false,
-		"Disable column alignment (output compact table)")
-	rootCmd.Flags().BoolVarP(&cfg.quietFlag, "quiet", "q", false,
-		"Suppress status messages")
-	rootCmd.Flags().StringVarP(&cfg.outputFilename, "output", "o", "",
-		"Write output to file")
 	rootCmd.Flags().StringVarP(&cfg.inputFileName, "input", "i", "",
 		"Read input from file")
+	rootCmd.Flags().BoolVarP(&cfg.noPrettyFlag, "no-pretty", "n", false,
+		"Disable column alignment (output compact table)")
+	rootCmd.Flags().StringVarP(&cfg.outputFilename, "output", "o", "",
+		"Write output to file")
+	rootCmd.Flags().BoolVarP(&cfg.pasteFlag, "paste", "p", false,
+		"Paste results to the clipboard")
+	rootCmd.Flags().BoolVarP(&cfg.quietFlag, "quiet", "q", false,
+		"Suppress status messages")
 }
 
 // handleOutput processes and writes the generated Markdown table to the
@@ -130,6 +129,7 @@ func handleOutput(markdownTable string) error {
 		if err != nil {
 			return fmt.Errorf("failed to align Markdown table: %w", err)
 		}
+
 		markdownTable = strings.Join(alignedRows, "\n")
 	}
 
@@ -138,12 +138,14 @@ func handleOutput(markdownTable string) error {
 		if err := WriteMD(cfg.outputFilename, markdownTable); err != nil {
 			return fmt.Errorf("failed to write to file: %w", err)
 		}
+
 		logrus.Infof("Markdown table successfully written to %s\n", cfg.outputFilename)
 
 	case cfg.pasteFlag:
 		if err := clipboard.WriteAll(markdownTable); err != nil {
 			return fmt.Errorf("failed to write Markdown to clipboard: %w", err)
 		}
+
 		logrus.Info("Markdown table copied to clipboard.")
 
 	default:
@@ -160,6 +162,7 @@ func ReadTSV(filename string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read file: %w", err)
 	}
+
 	return string(content), nil
 }
 
@@ -170,6 +173,7 @@ func WriteMD(filename, content string) error {
 	if err != nil {
 		return fmt.Errorf("failed to write content to file: %w", err)
 	}
+
 	return nil
 }
 
