@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/atotto/clipboard"
-	"github.com/pierow2k/tabtomd/internal/fileops"
 	"github.com/pierow2k/tabtomd/internal/mdalign"
 	"github.com/pierow2k/tabtomd/internal/tabto"
 	"github.com/sirupsen/logrus"
@@ -136,7 +135,7 @@ func handleOutput(markdownTable string) error {
 
 	switch {
 	case cfg.outputFilename != "":
-		if err := fileops.WriteMD(cfg.outputFilename, markdownTable); err != nil {
+		if err := WriteMD(cfg.outputFilename, markdownTable); err != nil {
 			return fmt.Errorf("failed to write to file: %w", err)
 		}
 		logrus.Infof("Markdown table successfully written to %s\n", cfg.outputFilename)
@@ -151,6 +150,26 @@ func handleOutput(markdownTable string) error {
 		fmt.Println(markdownTable)
 	}
 
+	return nil
+}
+
+// ReadTSV reads a tab-separated values (TSV) file and returns its contents
+// as a string.
+func ReadTSV(filename string) (string, error) {
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return "", fmt.Errorf("failed to read file: %w", err)
+	}
+	return string(content), nil
+}
+
+// WriteMD writes a string containing a Markdown table to the specified file.
+// If the file does not exist, it is created. If the file exists, it is truncated.
+func WriteMD(filename, content string) error {
+	err := os.WriteFile(filename, []byte(content), 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write content to file: %w", err)
+	}
 	return nil
 }
 
@@ -173,7 +192,7 @@ func runFunction(_ *cobra.Command, _ []string) error {
 
 	// Read input from file or clipboard.
 	if cfg.inputFileName != "" {
-		content, err = fileops.ReadTSV(cfg.inputFileName)
+		content, err = ReadTSV(cfg.inputFileName)
 		if err != nil {
 			return fmt.Errorf("failed to read file: %w", err)
 		}
