@@ -12,15 +12,16 @@ import (
 func loadRows(tb testing.TB, path string) []string {
 	tb.Helper()
 
-	f, err := os.Open(path)
+	file, err := os.Open(path)
 	if err != nil {
 		tb.Fatalf("open %s: %v", path, err)
 	}
-	defer f.Close()
+	defer file.Close() //nolint:errcheck
 
-	bZipReader := bzip2.NewReader(f)
+	bZipReader := bzip2.NewReader(file)
 
 	var rows []string
+
 	scanner := bufio.NewScanner(bZipReader)
 
 	// Optional: raise this if you may have very long lines.
@@ -30,6 +31,7 @@ func loadRows(tb testing.TB, path string) []string {
 	for scanner.Scan() {
 		rows = append(rows, scanner.Text())
 	}
+
 	if err := scanner.Err(); err != nil {
 		tb.Fatalf("scan %s: %v", path, err)
 	}
@@ -52,6 +54,7 @@ func BenchmarkAlign(b *testing.B) {
 
 	b.Run("small", func(b *testing.B) {
 		b.ReportAllocs()
+
 		for b.Loop() {
 			_, _ = mdalign.Align(small)
 		}
@@ -59,6 +62,7 @@ func BenchmarkAlign(b *testing.B) {
 
 	b.Run("2k rows", func(b *testing.B) {
 		b.ReportAllocs()
+
 		for b.Loop() {
 			_, _ = mdalign.Align(large)
 		}
