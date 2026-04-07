@@ -14,18 +14,6 @@ import (
 // table have varying numbers of columns.
 var ErrAlignmentFailed = errors.New("alignment failed")
 
-// formatRow formats a single table row with proper padding based on the
-// provided column widths. Each cell is left-aligned and padded with spaces
-// to match its corresponding column width.
-func formatRow(cells []string, columnWidths []int) string {
-	formattedCells := make([]string, len(cells))
-	for i, cell := range cells {
-		formattedCells[i] = fmt.Sprintf("%-*s", columnWidths[i], cell)
-	}
-
-	return "| " + strings.Join(formattedCells, " | ") + " |"
-}
-
 // isSeparatorRow checks if a given line from a Markdown table is the
 // header separator (e.g., "|---|---|").
 func isSeparatorRow(row string) bool {
@@ -95,6 +83,18 @@ func parseMarkdownTable(rows []string) ([][]string, []int, error) {
 	}
 
 	return tableData, columnWidths, nil
+}
+
+// formatRow formats a single table row with proper padding based on the
+// provided column widths. Each cell is left-aligned and padded with spaces
+// to match its corresponding column width.
+func formatRow(cells []string, columnWidths []int) string {
+	formattedCells := make([]string, len(cells))
+	for i, cell := range cells {
+		formattedCells[i] = fmt.Sprintf("%-*s", columnWidths[i], cell)
+	}
+
+	return "| " + strings.Join(formattedCells, " | ") + " |"
 }
 
 // buildHeaderSeparator creates a Markdown header separator row using
