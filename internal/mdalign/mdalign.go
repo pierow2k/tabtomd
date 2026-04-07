@@ -45,33 +45,33 @@ func parseMarkdownTable(rows []string) ([][]string, []int, error) {
 			continue
 		}
 
-		// Split the row into cells based on the pipe delimiter.
+		// Split the row into columns based on the pipe delimiter.
 		// The first and last elements will be empty due to the leading and
 		// trailing pipes, so we exclude them from the result.
-		cells := strings.Split(row, "|")
-		if len(cells) > 1 {
-			cells = cells[1 : len(cells)-1]
+		columns := strings.Split(row, "|")
+		if len(columns) > 1 {
+			columns = columns[1 : len(columns)-1]
 		} else {
 			// Skip rows that don't appear to be valid table rows.
 			continue
 		}
 
 		// Trim whitespace from each cell.
-		for i, cell := range cells {
-			cells[i] = strings.TrimSpace(cell)
+		for i, column := range columns {
+			columns[i] = strings.TrimSpace(column)
 		}
 
 		// For the first valid data row (the header), initialize columnWidths.
 		if len(tableData) == 0 {
-			columnWidths = make([]int, len(cells))
-		} else if len(cells) != len(columnWidths) {
+			columnWidths = make([]int, len(columns))
+		} else if len(columns) != len(columnWidths) {
 			// Ensure subsequent rows have a consistent number of columns.
 			return nil, nil, fmt.Errorf("%w: row %d has inconsistent column count",
 				ErrAlignmentFailed, rowIndex+1)
 		}
 
 		// Update the maximum width for each column.
-		for columnIndex, column := range cells {
+		for columnIndex, column := range columns {
 			// Use RuneCountInString to correctly handle multi-byte characters.
 			colWidth := utf8.RuneCountInString(column)
 			if colWidth > columnWidths[columnIndex] {
@@ -79,7 +79,7 @@ func parseMarkdownTable(rows []string) ([][]string, []int, error) {
 			}
 		}
 
-		tableData = append(tableData, cells)
+		tableData = append(tableData, columns)
 	}
 
 	return tableData, columnWidths, nil
