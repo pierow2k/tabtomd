@@ -10,9 +10,9 @@ import (
 	"unicode/utf8"
 )
 
-// ErrInconsistentColumnCount is returned when rows in the input Markdown
+// ErrAlignmentFailed is returned when rows in the input Markdown
 // table have varying numbers of columns.
-var ErrInconsistentColumnCount = errors.New("row has inconsistent column count")
+var ErrAlignmentFailed = errors.New("alignment failed")
 
 // formatRow formats a single table row with proper padding based on the
 // provided column widths. Each cell is left-aligned and padded with spaces
@@ -103,8 +103,8 @@ func parseMarkdownTable(rows []string) ([][]string, []int, error) {
 			columnWidths = make([]int, len(cells))
 		} else if len(cells) != len(columnWidths) {
 			// Ensure subsequent rows have a consistent number of columns.
-			return nil, nil, fmt.Errorf("%w: row %d",
-				ErrInconsistentColumnCount, rowIndex+1)
+			return nil, nil, fmt.Errorf("%w: row %d has inconsistent column count",
+				ErrAlignmentFailed, rowIndex+1)
 		}
 
 		// Update the maximum width for each column.

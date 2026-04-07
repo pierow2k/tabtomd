@@ -52,8 +52,8 @@ func ExampleAlign_emptyInput() {
 	// No rows to align.
 }
 
-// Align returns the sentinel error ErrInconsistentColumnCount when the
-// input data has an inconsistent number of columns.
+// Align returns the sentinel error ErrAlignmentFailed when the input data
+// has an inconsistent number of columns.
 func ExampleAlign_inconsistentColumns() {
 	rows := []string{
 		"| Name    | Age | City         |",
@@ -64,12 +64,12 @@ func ExampleAlign_inconsistentColumns() {
 	}
 
 	_, err := mdalign.Align(rows)
-	if errors.Is(err, mdalign.ErrInconsistentColumnCount) {
+	if errors.Is(err, mdalign.ErrAlignmentFailed) {
 		fmt.Println("Error:", err)
 	}
 
 	// Output:
-	// Error: row has inconsistent column count: row 5
+	// Error: alignment failed: row 5 has inconsistent column count
 }
 
 // Align properly handles escaped characters in the input.
