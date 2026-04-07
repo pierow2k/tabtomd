@@ -26,31 +26,6 @@ func formatRow(cells []string, columnWidths []int) string {
 	return "| " + strings.Join(formattedCells, " | ") + " |"
 }
 
-// Align formats a Markdown table for uniform column alignment. It accepts
-// a slice of strings, where each string is a row of the table, and returns
-// a new slice with each column padded for readability.
-// It returns an error if the table has an inconsistent column count.
-func Align(rows []string) ([]string, error) {
-	table, columnWidths, err := parseMarkdownTable(rows)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(table) == 0 {
-		return rows, nil
-	}
-
-	result := make([]string, 0, len(table)+1)
-	result = append(result, formatRow(table[0], columnWidths))
-
-	result = append(result, buildHeaderSeparator(columnWidths))
-	for _, row := range table[1:] {
-		result = append(result, formatRow(row, columnWidths))
-	}
-
-	return result, nil
-}
-
 // isSeparatorRow checks if a given line from a Markdown table is the
 // header separator (e.g., "|---|---|").
 func isSeparatorRow(row string) bool {
@@ -139,4 +114,29 @@ func buildHeaderSeparator(columnWidths []int) string {
 	}
 
 	return "| " + strings.Join(separatorCells, " | ") + " |"
+}
+
+// Align formats a Markdown table for uniform column alignment. It accepts
+// a slice of strings, where each string is a row of the table, and returns
+// a new slice with each column padded for readability.
+// It returns an error if the table has an inconsistent column count.
+func Align(rows []string) ([]string, error) {
+	table, columnWidths, err := parseMarkdownTable(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(table) == 0 {
+		return rows, nil
+	}
+
+	result := make([]string, 0, len(table)+1)
+	result = append(result, formatRow(table[0], columnWidths))
+
+	result = append(result, buildHeaderSeparator(columnWidths))
+	for _, row := range table[1:] {
+		result = append(result, formatRow(row, columnWidths))
+	}
+
+	return result, nil
 }
