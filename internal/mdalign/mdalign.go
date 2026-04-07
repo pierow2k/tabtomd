@@ -102,8 +102,6 @@ func parseMarkdownTable(rows []string) ([][]string, []int, error) {
 // that each separator has at least minSeparatorWidth hyphens to comply
 // with the Markdown specification requiring a minimum of 3.
 func buildHeaderSeparator(columnWidths []int) string {
-	// minSeparatorWidth is the minimum width required for a Markdown
-	// table separator to be compliant with the specification.
 	const minSeparatorWidth = 3
 
 	separatorCells := make([]string, len(columnWidths))
