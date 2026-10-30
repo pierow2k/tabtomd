@@ -72,5 +72,6 @@ dist/*
 !dist/.gitkeep
 site/public/*
 !site/public/.gitkeep
+site/README.md
 doc/tabtomd.1
 doc/tabtomd.1.pdf
