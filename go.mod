@@ -1,6 +1,6 @@
 module github.com/pierow2k/tabtomd
 
-go 1.26.10
+go 1.26.11
 
 require (
 	github.com/atotto/clipboard v0.1.4
