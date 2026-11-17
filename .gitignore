@@ -75,3 +75,4 @@ site/public/*
 site/README.md
 doc/tabtomd.1
 doc/tabtomd.1.pdf
+tmp/dist
