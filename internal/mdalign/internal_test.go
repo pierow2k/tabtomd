@@ -1,6 +1,6 @@
 // White-box tests for unexported functions in the mdalign package.
 //
-//nolint:gosmopolitan,funlen
+//nolint:funlen, goconst, gosmopolitan
 package mdalign
 
 import (

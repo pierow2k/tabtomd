@@ -1,5 +1,7 @@
 // Package mdalign_test provides black-box tests and runnable examples for
 // the public API of the mdalign package.
+//
+//nolint:goconst
 package mdalign_test
 
 import (
