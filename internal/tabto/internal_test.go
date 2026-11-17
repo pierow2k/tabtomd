@@ -1,4 +1,6 @@
 // White-box tests for unexported functions in the tabto package.
+//
+//nolint:funlen, goconst
 package tabto
 
 import (
@@ -210,25 +212,108 @@ func Test_determineColumnCount(t *testing.T) {
 		args args
 		want int
 	}{
+		// No lines at all.
 		{
-			name: "valid lines",
-			args: args{lines: []string{"h1\th2", "r1\tr2"}},
-			want: 2,
+			name: "nil input returns zero",
+			args: args{lines: nil},
+			want: 0,
 		},
 		{
-			name: "leading empty lines",
-			args: args{lines: []string{"", "  ", "h1\th2\th3"}},
+			name: "empty slice returns zero",
+			args: args{lines: []string{}},
+			want: 0,
+		},
+
+		// No non-empty line to establish a column count.
+		{
+			name: "single empty line returns zero",
+			args: args{lines: []string{""}},
+			want: 0,
+		},
+		{
+			name: "lines with only spaces return zero",
+			args: args{lines: []string{"   ", "", "  "}},
+			want: 0,
+		},
+		// A tab-only line is a real two-column row, not an empty line,
+		// so it establishes the column count.
+		{
+			name: "tab-only line establishes two columns",
+			args: args{lines: []string{"   ", "\t", "a"}},
+			want: 2,
+		},
+
+		// The first non-empty line establishes the count.
+		{
+			name: "first line determines count",
+			args: args{lines: []string{"a\tb\tc", "d\te"}},
 			want: 3,
 		},
 		{
-			name: "no valid lines",
-			args: args{lines: []string{"", "  ", "\t"}},
-			want: 0,
+			name: "leading empty and whitespace lines are skipped",
+			args: args{lines: []string{"", "   ", "a\tb"}},
+			want: 2,
 		},
 		{
-			name: "empty input",
-			args: args{lines: []string{}},
-			want: 0,
+			name: "interior blank lines before first row are skipped",
+			args: args{lines: []string{"", "   ", "", "a\tb\tc", "", "d\te\tf"}},
+			want: 3,
+		},
+
+		// Tab handling: tabs are structural, so these are not empty rows.
+		// (The old helper trimmed whole lines before parsing, which
+		// collapsed these to 1 column.)
+		{
+			name: "leading tab yields empty first cell",
+			args: args{lines: []string{"\ta"}},
+			want: 2,
+		},
+		{
+			name: "trailing tab yields empty last cell",
+			args: args{lines: []string{"a\t"}},
+			want: 2,
+		},
+		{
+			name: "tab-only line is two empty cells",
+			args: args{lines: []string{"", "\t", "a\tb"}},
+			want: 2,
+		},
+		{
+			name: "whitespace-only cells are preserved as cells",
+			args: args{lines: []string{"  \t  "}},
+			want: 2,
+		},
+
+		// Cells are trimmed before counting columns, not by removing tabs.
+		{
+			name: "cell whitespace is trimmed but tabs are kept",
+			args: args{lines: []string{"  a  \t b "}},
+			want: 2,
+		},
+		{
+			name: "single cell without tabs",
+			args: args{lines: []string{"header"}},
+			want: 1,
+		},
+		{
+			name: "empty first cell with no tabs is an empty row",
+			args: args{lines: []string{"   ", "a\tb"}},
+			want: 2,
+		},
+
+		// The function only inspects lines up to the first non-empty row.
+		{
+			name: "later inconsistent rows are not examined",
+			args: args{lines: []string{"a\tb", "x", "y\tz\tw"}},
+			want: 2,
+		},
+
+		// A trailing \r (e.g., from CRLF input split on \n) is trimmed
+		// from the final cell and does not affect the count.
+		{
+			name: "trailing carriage return is trimmed",
+			args: args{lines: []string{"a\tb\r"}},
+			want: 2,
 		},
 	}
 	for _, testCase := range tests {

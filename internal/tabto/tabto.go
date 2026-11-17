@@ -66,33 +66,30 @@ func trimEmptyLines(lines []string) []string {
 	return lines
 }
 
+// isEmptyRow reports whether a parsed row represents an empty table row:
+// a row with no cells (from an empty line) or a single empty cell (from a
+// line containing only whitespace). Lines that contain tabs always produce
+// at least two cells and are therefore never considered empty.
+func isEmptyRow(row []string) bool {
+	return len(row) == 0 || (len(row) == 1 && row[0] == "")
+}
+
 // determineColumnCount determines the expected column count by examining
 // the first non-empty row in the input lines. It returns 0 if no non-empty
 // row is found.
 func determineColumnCount(lines []string) int {
 	for _, line := range lines {
-		trimmedLine := strings.TrimSpace(line)
-		if trimmedLine == "" {
-			continue
+		if row := parseRow(line); !isEmptyRow(row) {
+			return len(row)
 		}
-
-		firstRow := parseRow(trimmedLine)
-
-		return len(firstRow)
 	}
 
 	return 0
 }
 
 // validateAndParseRow validates that a line has the expected number of
-// columns and parses it into a slice of cell strings. Lines containing
-// only whitespace are treated as empty and padded with empty strings to
-// match expectedCols.
-//
-// Parameters:
-//   - line: the tab-delimited line to parse
-//   - expectedCols: the required number of columns
-//   - rowIndex: the 0-based row index, used for error reporting
+// columns and parses it into a slice of cell strings. Lines that parse to
+// an empty row are padded with empty strings to match expectedCols.
 //
 // Returns the parsed row or an error wrapping ErrInconsistentColumnCount.
 func validateAndParseRow(
@@ -100,21 +97,18 @@ func validateAndParseRow(
 	expectedCols int,
 	rowIndex int,
 ) ([]string, error) {
-	// Treat lines containing only whitespace as empty rows.
-	if strings.TrimSpace(line) == "" {
+	row := parseRow(line)
+	if isEmptyRow(row) {
 		return make([]string, expectedCols), nil
 	}
 
-	row := parseRow(line)
-
 	if len(row) != expectedCols {
 		return nil, fmt.Errorf(
-			"%w: row %d (expected %d columns, got %d): %q",
+			"%w: row %d (expected %d columns, got %d)",
 			ErrInconsistentColumnCount,
 			rowIndex+1,
 			expectedCols,
 			len(row),
-			strings.TrimSpace(line),
 		)
 	}
 
@@ -131,38 +125,20 @@ func validateAndParseRow(
 // ErrInconsistentColumnCount is returned. Empty rows within the table
 // are padded with empty strings to match the column count.
 func parseTable(text string) ([][]string, error) {
-	lines := strings.Split(text, "\n")
-	lines = trimEmptyLines(lines)
-
+	lines := trimEmptyLines(strings.Split(text, "\n"))
 	if len(lines) == 0 {
 		return [][]string{}, nil
 	}
 
+	// trimEmptyLines guarantees the first line is non-empty, so the
+	// column count is always determined and non-zero here.
+	expectedCols := determineColumnCount(lines)
+
 	tableData := make([][]string, 0, len(lines))
-
-	var expectedCols int
-
 	for lineIndex, line := range lines {
-		row := parseRow(line)
-
-		// Handle empty rows: skip when determining column count,
-		// otherwise pad with empty cells to maintain consistency.
-		if len(row) == 0 || (len(row) == 1 && row[0] == "") {
-			if expectedCols == 0 {
-				continue
-			}
-
-			row = make([]string, expectedCols)
-		}
-
-		// Validate column consistency against the first non-empty row.
-		if expectedCols == 0 {
-			expectedCols = len(row)
-		} else if len(row) != expectedCols {
-			return nil, fmt.Errorf(
-				"%w: row %d (expected %d columns, got %d)",
-				ErrInconsistentColumnCount, lineIndex+1, expectedCols, len(row),
-			)
+		row, err := validateAndParseRow(line, expectedCols, lineIndex)
+		if err != nil {
+			return nil, err
 		}
 
 		tableData = append(tableData, row)

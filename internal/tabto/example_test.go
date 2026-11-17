@@ -1,5 +1,7 @@
 // Package tabto_test provides black-box tests and runnable examples
 // for the public API of the tabto package.
+//
+//nolint:goconst
 package tabto_test
 
 import (

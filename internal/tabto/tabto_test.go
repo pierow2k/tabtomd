@@ -1,7 +1,7 @@
 // Package tabto_test provides black-box tests and testable examples for
 // the public API of the tabto package.
 //
-//nolint:funlen
+//nolint:funlen, goconst
 package tabto_test
 
 import (
