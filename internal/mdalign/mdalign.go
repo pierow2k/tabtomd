@@ -28,6 +28,53 @@ func isSeparatorRow(row string) bool {
 	return strings.Trim(trimmed, "-:| \t") == ""
 }
 
+// parseRow splits a single Markdown table row into its cells, with
+// whitespace trimmed from each cell. It returns nil if the row is the
+// header separator (which carries no data) or is not a valid table row
+// (i.e., contains no pipe-delimited cells).
+func parseRow(row string) []string {
+	// strings.Split on a row containing at least one pipe yields at
+	// least two parts: the empty segments before the first pipe and
+	// after the last pipe. Fewer parts means the row has no pipes and
+	// therefore no cells to parse.
+	const minSplitParts = 2
+
+	// Skip the header separator line, as it doesn't contain data.
+	if isSeparatorRow(row) {
+		return nil
+	}
+
+	// Split the row into columns based on the pipe delimiter. The first
+	// and last elements are empty due to the leading and trailing
+	// pipes, so we exclude them from the result.
+	cells := strings.Split(row, "|")
+	if len(cells) < minSplitParts {
+		return nil
+	}
+
+	cells = cells[1 : len(cells)-1]
+
+	// Trim whitespace from each cell.
+	for i, cell := range cells {
+		cells[i] = strings.TrimSpace(cell)
+	}
+
+	return cells
+}
+
+// updateColumnWidths widens the entries of columnWidths so that every
+// cell in cells fits within its column. It uses rune counts to correctly
+// handle multi-byte characters.
+// Precondition: len(columnWidths) == len(cells), as guaranteed by the
+// column-count check in parseMarkdownTable.
+func updateColumnWidths(columnWidths []int, cells []string) {
+	for i, cell := range cells {
+		if width := utf8.RuneCountInString(cell); width > columnWidths[i] {
+			columnWidths[i] = width
+		}
+	}
+}
+
 // parseMarkdownTable parses rows of a Markdown table into a 2D slice of
 // cells, while calculating the maximum width of each column. It ignores
 // header separator rows during parsing.
@@ -40,46 +87,24 @@ func parseMarkdownTable(rows []string) ([][]string, []int, error) {
 	)
 
 	for rowIndex, row := range rows {
-		// Skip the header separator line, as it doesn't contain data.
-		if isSeparatorRow(row) {
+		cells := parseRow(row)
+		if cells == nil {
+			// Not a data row: either the header separator or a line that
+			// doesn't look like a table row.
 			continue
 		}
 
-		// Split the row into columns based on the pipe delimiter.
-		// The first and last elements will be empty due to the leading and
-		// trailing pipes, so we exclude them from the result.
-		columns := strings.Split(row, "|")
-		if len(columns) > 1 {
-			columns = columns[1 : len(columns)-1]
-		} else {
-			// Skip rows that don't appear to be valid table rows.
-			continue
-		}
-
-		// Trim whitespace from each cell.
-		for i, column := range columns {
-			columns[i] = strings.TrimSpace(column)
-		}
-
-		// For the first valid data row (the header), initialize columnWidths.
+		// The first valid data row (the header) defines the column layout;
+		// every subsequent row must match it.
 		if len(tableData) == 0 {
-			columnWidths = make([]int, len(columns))
-		} else if len(columns) != len(columnWidths) {
-			// Ensure subsequent rows have a consistent number of columns.
+			columnWidths = make([]int, len(cells))
+		} else if len(cells) != len(columnWidths) {
 			return nil, nil, fmt.Errorf("%w: row %d has inconsistent column count",
 				ErrAlignmentFailed, rowIndex+1)
 		}
 
-		// Update the maximum width for each column.
-		for columnIndex, column := range columns {
-			// Use RuneCountInString to correctly handle multi-byte characters.
-			colWidth := utf8.RuneCountInString(column)
-			if colWidth > columnWidths[columnIndex] {
-				columnWidths[columnIndex] = colWidth
-			}
-		}
-
-		tableData = append(tableData, columns)
+		updateColumnWidths(columnWidths, cells)
+		tableData = append(tableData, cells)
 	}
 
 	return tableData, columnWidths, nil
