@@ -114,7 +114,7 @@ func ExampleMarkdown_singleRow() {
 	fmt.Println(markdownTable)
 	// Output:
 	// | Header1 | Header2 | Header3 |
-	// | ---:| ---:| ---:|
+	// | --- | --- | --- |
 }
 
 // multi-byte characters are handled correctly when determining column

@@ -143,9 +143,9 @@ func TestHTML(t *testing.T) {
 			want: `<table class="go-pretty-table">
   <thead>
   <tr>
-    <th align="right">Header1</th>
-    <th align="right">Header2</th>
-    <th align="right">Header3</th>
+    <th>Header1</th>
+    <th>Header2</th>
+    <th>Header3</th>
   </tr>
   </thead>
 </table>
