@@ -4,7 +4,7 @@ go 1.26.11
 
 require (
 	github.com/atotto/clipboard v0.1.4
-	github.com/jedib0t/go-pretty/v6 v6.9.2
+	github.com/jedib0t/go-pretty/v6 v6.9.3
 	github.com/sirupsen/logrus v1.10.2
 	github.com/spf13/cobra v1.10.2
 )
